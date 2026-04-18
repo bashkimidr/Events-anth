@@ -1,5 +1,15 @@
 {
-  "dependencies": {
+  "name": "events-anth",
+  "version": "0.1.0",
+  "description": "Events discovery web app",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
     "jsdom": "^29.0.2"
-  }
+  },
+  "license": "MIT"
 }
