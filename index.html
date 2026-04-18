@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Discovery</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="search-container">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" id="search-input" placeholder="Search..." autocomplete="off">
+                <div id="search-dropdown" class="search-dropdown" style="display: none;"></div>
+            </div>
+<!--             <div class="avatar-container" id="profile-btn">
+                <img src="https://i.pravatar.cc/150?img=32" alt="Avatar">
+            </div> -->
+        </header>
+
+        <!-- Categories / Filters -->
+        <section class="categories" id="filter-container">
+            <button class="filter-pill active" data-category="All" title="All"><i data-lucide="layers"></i><span>All</span></button>
+            <button class="filter-pill" data-category="Sports" title="Sports"><i data-lucide="dribbble"></i><span>Sports</span></button>
+            <button class="filter-pill" data-category="Education" title="Education"><i data-lucide="book-open"></i><span>Education</span></button>
+            <button class="filter-pill" data-category="Music" title="Music"><i data-lucide="music"></i><span>Music</span></button>
+            <button class="filter-pill" data-category="Entertainment" title="Entertainment"><i data-lucide="smile"></i><span>Entertainment</span></button>
+            <button class="filter-pill my-events-btn" data-category="MyEvents" title="My Events" style="margin-left: auto;"><i data-lucide="heart"></i><span>My Events</span></button>
+        </section>
+
+        <!-- Cities / Filters -->
+        <section class="categories city-filters" id="city-filter-container" style="margin-top: 12px; padding-top: 0;">
+            <!-- dynamically rendered based on active events -->
+        </section>
+
+        <!-- Events Grid -->
+        <main class="events-main">
+            <div class="events-header">
+                <h2>Events <span id="event-count">0 Items</span></h2>
+                <div class="header-actions">
+                    <button id="theme-toggle" class="icon-btn" title="Toggle Theme"><i data-lucide="moon"></i></button>
+                </div>
+            </div>
+            <div class="events-grid" id="events-grid">
+                <!-- Cards will be injected via JS -->
+            </div>
+        </main>
+
+        <!-- Event Detail View -->
+        <main class="event-detail-view" id="event-detail-view" style="display: none;">
+            <button class="icon-btn back-btn" id="back-to-events" title="Back"><i data-lucide="arrow-left"></i></button>
+            <div class="detail-image-wrapper">
+                <img id="detail-image" src="" alt="Event Image">
+            </div>
+            <div class="detail-content">
+                <h1 class="detail-title" id="detail-title">Event Title</h1>
+                <div class="detail-date">
+                    <i data-lucide="calendar"></i>
+                    <span id="detail-date-time">Date and Time</span>
+                </div>
+                
+                <div class="detail-info-cards">
+                    <div class="info-card">
+                        <span class="info-card-title">Price</span>
+                        <span class="info-card-value" id="detail-price">Free</span>
+                    </div>
+                    <div class="info-card">
+                        <span class="info-card-title">People going</span>
+                        <span class="info-card-value" id="detail-going-count" style="font-size: 16px; font-weight: 700; color: var(--text-color);">0</span>
+                    </div>
+                    <div class="info-card">
+                        <span class="info-card-title">Location</span>
+                        <span class="info-card-value" id="detail-location">Location</span>
+                    </div>
+                    <div class="info-card" id="detail-going-card" style="cursor: pointer; transition: transform 0.2s;">
+                        <span class="info-card-title">Going?</span>
+                        <span class="info-card-value" id="detail-going-icon" style="font-size: 24px; filter: grayscale(1); opacity: 0.4; transition: all 0.3s ease; line-height: 1;">✅</span>
+                    </div>
+                </div>
+
+                <div class="detail-description" id="detail-description">
+                    <p>Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting.</p>
+                    <p style="margin-top: 12px;">Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting.</p>
+                </div>
+            </div>
+        </main>
+
+        <button id="admin-add-btn" class="fab-btn" title="Request New Event"><i data-lucide="plus-circle"></i></button>
+    </div>
+
+    <!-- Modals -->
+    <!-- Profile Modal -->
+    <div class="modal-overlay" id="profile-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>User Profile</h3>
+                <button class="close-btn" id="close-profile"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <p>Select categories to receive notifications for:</p>
+                <div class="toggle-list" id="preferences-list">
+                    <!-- Populated via JS -->
+                </div>
+                <div class="save-wrap">
+                    <button class="save-btn" id="save-preferences">Save Preferences</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Modal -->
+    <div class="modal-overlay" id="admin-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Request New Event</h3>
+                <button class="close-btn" id="close-admin"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body form-body">
+                <div class="form-group">
+                    <label>Event Title</label>
+                    <input type="text" id="event-title" placeholder="e.g., Summer Music Festival" required>
+                </div>
+                <div class="form-group" style="display: flex; gap: 12px;">
+                    <div style="flex: 1;">
+                        <label>Email Address</label>
+                        <input type="email" id="event-email" placeholder="email@example.com" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Phone Number</label>
+                        <input type="tel" id="event-phone" placeholder="(555) 555-5555" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="event-category">
+                        <option value="Sports">Sports</option>
+                        <option value="Education">Education</option>
+                        <option value="Music">Music</option>
+                        <option value="Entertainment">Entertainment</option>
+                    </select>
+                </div>
+                <div class="form-group" style="display: flex; gap: 12px;">
+                    <div style="flex: 1;">
+                        <label>Date</label>
+                        <input type="date" id="event-date" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Time</label>
+                        <input type="time" id="event-time" required>
+                    </div>
+                </div>
+                <div class="form-group" style="display: flex; gap: 12px;">
+                    <div style="flex: 2;">
+                        <label>Location</label>
+                        <input type="text" id="event-location" placeholder="e.g., Central Park" required>
+                    </div>
+                    <div style="flex: 1;">
+                        <label>Price</label>
+                        <input type="text" id="event-price" placeholder="e.g., Free, $20" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>City</label>
+                    <select id="event-city" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="event-description" placeholder="A detailed description of the event..." style="width: 100%; min-height: 80px; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--card-radius); background: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 14px; resize: vertical;" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Event Image (Local Upload)</label>
+                    <input type="file" id="event-image-file" accept="image/*">
+                </div>
+                <div class="save-wrap">
+                    <button class="save-btn" id="save-event">Submit Request</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

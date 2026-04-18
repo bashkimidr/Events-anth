@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Discovery - Requested Events Inbox</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { padding: 40px; background: var(--bg-color); color: var(--text-color); }
+        .admin-container { 
+            max-width: 600px; 
+            margin: 0 auto; 
+            background: var(--card-bg); 
+            padding: 30px; 
+            border-radius: var(--card-radius); 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        }
+        .admin-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 24px; 
+            border-bottom: 1px solid var(--border-color); 
+            padding-bottom: 16px; 
+        }
+        .admin-header a {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+        .admin-header a:hover { color: var(--text-color); }
+    </style>
+</head>
+<body data-theme="">
+    <div class="admin-container" style="margin-top: 40px; margin-bottom: 40px;">
+        <div class="admin-header">
+            <h2>Requested Events Inbox</h2>
+            <div style="display: flex; gap: 16px;">
+                <a href="admin.html"><i data-lucide="plus-circle" style="width: 14px;"></i> Create Event</a>
+                <a href="index.html"><i data-lucide="arrow-left" style="width: 14px;"></i> Back to App</a>
+            </div>
+        </div>
+        <div id="requested-events-container" style="display:flex; flex-direction:column; gap:16px;">
+            <!-- Requested events will render here -->
+        </div>
+    </div>
+    
+    <script src="inbox.js"></script>
+</body>
+</html>
