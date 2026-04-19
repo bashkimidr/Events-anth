@@ -1,0 +1,9 @@
+User-agent: *
+Disallow: /admin.html
+Disallow: /edit-event.html
+Disallow: /inbox.html
+Disallow: /login.html
+Disallow: /scripts/
+Disallow: /event-pictures/
+
+Sitemap: https://CHANGE-ME-AFTER-DEPLOY.com/sitemap.xml

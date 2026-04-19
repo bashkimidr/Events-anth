@@ -22,7 +22,8 @@ const MIME_TYPES = {
     '.jpeg':'image/jpeg',
     '.gif': 'image/gif',
     '.svg': 'image/svg+xml',
-    '.ico': 'image/x-icon'
+    '.ico': 'image/x-icon',
+    '.txt': 'text/plain'
 };
 
 http.createServer((req, res) => {
@@ -67,7 +68,16 @@ http.createServer((req, res) => {
     }
 
     // 2. Serve Static Resources Normal Execution
-    let filePath = path.join(__dirname, req.url === '/' ? 'index.html' : req.url);
+    const urlObj  = new URL(req.url, 'http://localhost');
+    const pathname = urlObj.pathname === '/' ? '/index.html' : urlObj.pathname;
+    let filePath  = path.join(__dirname, pathname);
+
+    // Directory traversal guard
+    if (!path.resolve(filePath).startsWith(path.resolve(__dirname))) {
+        res.writeHead(403, { 'Content-Type': 'text/plain' });
+        return res.end('Forbidden');
+    }
+
     const ext = path.extname(filePath);
     
     fs.readFile(filePath, (err, content) => {
