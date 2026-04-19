@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <title>Event Discovery</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -22,15 +23,8 @@
             </div> -->
         </header>
 
-        <!-- Categories / Filters -->
-        <section class="categories" id="filter-container">
-            <button class="filter-pill active" data-category="All" title="All"><i data-lucide="layers"></i><span>All</span></button>
-            <button class="filter-pill" data-category="Sports" title="Sports"><i data-lucide="dribbble"></i><span>Sports</span></button>
-            <button class="filter-pill" data-category="Education" title="Education"><i data-lucide="book-open"></i><span>Education</span></button>
-            <button class="filter-pill" data-category="Music" title="Music"><i data-lucide="music"></i><span>Music</span></button>
-            <button class="filter-pill" data-category="Entertainment" title="Entertainment"><i data-lucide="smile"></i><span>Entertainment</span></button>
-            <button class="filter-pill my-events-btn" data-category="MyEvents" title="My Events" style="margin-left: auto;"><i data-lucide="heart"></i><span>My Events</span></button>
-        </section>
+        <!-- Categories / Filters — populated dynamically from DB via app.js -->
+        <section class="categories" id="filter-container"></section>
 
         <!-- Cities / Filters -->
         <section class="categories city-filters" id="city-filter-container" style="margin-top: 12px; padding-top: 0;">
@@ -182,6 +176,7 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="public-config.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>

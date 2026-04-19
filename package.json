@@ -4,11 +4,12 @@
   "description": "Events discovery web app",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node server.js"
+    "build:config": "node scripts/build-config.js",
+    "start": "npm run build:config && node server.js",
+    "dev": "npm run build:config && node server.js"
   },
-  "dependencies": {},
   "devDependencies": {
+    "dotenv": "^17.4.2",
     "jsdom": "^29.0.2"
   },
   "license": "MIT"
