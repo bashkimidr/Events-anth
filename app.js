@@ -1,9 +1,11 @@
 import { fetchPublishedEvents, fetchCities, fetchCategories, submitEventRequest } from './db.js';
+import { getVisitorLocation, findNearestCity, setUserCityOverride, clearUserCityOverride } from './geo.js';
 
 // State
 let events        = [];
 let categoriesData = [];
 let citiesData    = [];
+let activeCity    = '';
 
 const iconFallbacks = {
     'Sports':        'dribbble',
@@ -16,23 +18,32 @@ const iconFallbacks = {
 let userPreferences = JSON.parse(localStorage.getItem('userPreferences') || '{}');
 
 // DOM Elements
-const eventsGrid          = document.getElementById('events-grid');
-const filterContainer     = document.getElementById('filter-container');
-const eventCount          = document.getElementById('event-count');
-const themeToggle         = document.getElementById('theme-toggle');
-const profileModal        = document.getElementById('profile-modal');
-const closeProfile        = document.getElementById('close-profile');
-const preferencesList     = document.getElementById('preferences-list');
-const savePreferences     = document.getElementById('save-preferences');
-const adminAddBtn         = document.getElementById('admin-add-btn');
-const adminModal          = document.getElementById('admin-modal');
-const closeAdmin          = document.getElementById('close-admin');
-const saveEvent           = document.getElementById('save-event');
-const eventCategorySelect = document.getElementById('event-category');
-const eventDetailView     = document.getElementById('event-detail-view');
-const pageHeader          = document.querySelector('.header');
-const categoriesSection   = document.querySelector('.categories');
-const eventsMain          = document.querySelector('.events-main');
+const eventsGrid             = document.getElementById('events-grid');
+const filterContainer        = document.getElementById('filter-container');
+const cityFilterContainer    = document.getElementById('city-filter-container');
+const eventCount             = document.getElementById('event-count');
+const themeToggle            = document.getElementById('theme-toggle');
+const myEventsBtn            = document.getElementById('my-events-btn');
+const profileModal           = document.getElementById('profile-modal');
+const closeProfile           = document.getElementById('close-profile');
+const preferencesList        = document.getElementById('preferences-list');
+const savePreferences        = document.getElementById('save-preferences');
+const adminAddBtn            = document.getElementById('admin-add-btn');
+const adminModal             = document.getElementById('admin-modal');
+const closeAdmin             = document.getElementById('close-admin');
+const saveEvent              = document.getElementById('save-event');
+const eventCategorySelect    = document.getElementById('event-category');
+const eventDetailView        = document.getElementById('event-detail-view');
+const pageHeader             = document.querySelector('.header');
+const categoriesSection      = document.querySelector('.categories');
+const eventsMain             = document.querySelector('.events-main');
+const mobileFilters          = document.getElementById('mobile-filters');
+const filterPanelCategories  = document.getElementById('filter-panel-categories');
+const filterPanelCities      = document.getElementById('filter-panel-cities');
+const filterCardCategories   = document.getElementById('filter-card-categories');
+const filterCardCities       = document.getElementById('filter-card-cities');
+const filterCardCatLabel     = document.getElementById('filter-card-categories-label');
+const filterCardCityLabel    = document.getElementById('filter-card-cities-label');
 
 let currentDetailEventId = null;
 
@@ -56,6 +67,8 @@ function normalizeEvent(e) {
         slug:         e.slug                  || '',
     };
 }
+
+const capitalizeWords = str => str ? str.replace(/\b\w/g, c => c.toUpperCase()) : str;
 
 function getCategoryIcon(categoryName, iconName) {
     const icon = iconName || iconFallbacks[categoryName] || 'calendar';
@@ -88,40 +101,25 @@ function renderCategoryFilters() {
         filterContainer.appendChild(btn);
     });
 
-    const myEventsBtn = document.createElement('button');
-    myEventsBtn.className = 'filter-pill my-events-btn';
-    myEventsBtn.setAttribute('data-category', 'MyEvents');
-    myEventsBtn.title = 'My Events';
-    myEventsBtn.style.marginLeft = 'auto';
-    myEventsBtn.innerHTML = `<i data-lucide="heart"></i><span>My Events</span>`;
-    filterContainer.appendChild(myEventsBtn);
-
     lucide.createIcons();
 }
 
 // --- City filter pills + modal select (rendered from DB) ---
 function renderCityFilters() {
-    const cityContainer = document.getElementById('city-filter-container');
-    if (!cityContainer) return;
-
-    let activeCities = Array.from(cityContainer.querySelectorAll('.city-pill.active'))
-        .map(b => b.getAttribute('data-city'));
-    if (activeCities.length === 0) activeCities = ['All'];
-
-    cityContainer.innerHTML = '';
+    cityFilterContainer.innerHTML = '';
 
     const allBtn = document.createElement('button');
-    allBtn.className = `filter-pill city-pill ${activeCities.includes('All') ? 'active' : ''}`;
+    allBtn.className = `filter-pill city-pill ${!activeCity ? 'active' : ''}`;
     allBtn.setAttribute('data-city', 'All');
     allBtn.innerHTML = `<span>All Cities</span>`;
-    cityContainer.appendChild(allBtn);
+    cityFilterContainer.appendChild(allBtn);
 
     citiesData.forEach(city => {
         const btn = document.createElement('button');
-        btn.className = `filter-pill city-pill ${activeCities.includes(city.name) ? 'active' : ''}`;
+        btn.className = `filter-pill city-pill ${activeCity === city.name ? 'active' : ''}`;
         btn.setAttribute('data-city', city.name);
-        btn.innerHTML = `<span>${city.name}</span>`;
-        cityContainer.appendChild(btn);
+        btn.innerHTML = `<span>${capitalizeWords(city.name)}</span>`;
+        cityFilterContainer.appendChild(btn);
     });
 
     // Populate city select in request modal
@@ -179,12 +177,11 @@ function showErrorState(retryFn) {
 function renderEvents() {
     eventsGrid.innerHTML = '';
 
-    const activeCatBtn   = document.querySelector('#filter-container .filter-pill.active');
-    const categoryFilter = activeCatBtn ? activeCatBtn.getAttribute('data-category') : 'All';
+    const isMyEvents     = myEventsBtn.classList.contains('active');
+    const activeCatBtn   = !isMyEvents && document.querySelector('#filter-container .filter-pill.active');
+    const categoryFilter = isMyEvents ? 'MyEvents' : (activeCatBtn ? activeCatBtn.getAttribute('data-category') : 'All');
 
-    const selectedCityNodes  = document.querySelectorAll('#city-filter-container .city-pill.active');
-    const selectedCities     = Array.from(selectedCityNodes).map(n => n.getAttribute('data-city'));
-    const isAllCities        = selectedCities.includes('All') || selectedCities.length === 0;
+    const isAllCities = !activeCity;
 
     const today    = new Date();
     const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -198,9 +195,7 @@ function renderEvents() {
             if (categoryFilter !== 'All' && e.category !== categoryFilter) return false;
         }
 
-        const eventCitySafe    = (e.city || '').toLowerCase().trim();
-        const selectedCitiesSafe = selectedCities.map(c => c.toLowerCase().trim());
-        return isAllCities || selectedCitiesSafe.includes(eventCitySafe);
+        return isAllCities || (e.city || '').toLowerCase().trim() === activeCity.toLowerCase().trim();
     });
 
     eventCount.innerText = `${filteredEvents.length} Items`;
@@ -240,7 +235,7 @@ function renderEvents() {
                 <h3 class="card-title">${event.title}</h3>
                 <div class="card-meta">
                     <p class="card-date"><i data-lucide="calendar" class="meta-icon"></i>${formatDate(event.date)}${event.time ? ' <i data-lucide="clock" class="meta-icon" style="margin-left:6px;"></i> ' + event.time : ''}</p>
-                    ${event.location ? '<p class="card-location"><i data-lucide="map-pin" class="meta-icon"></i>' + event.location + (event.city ? ', ' + event.city : '') + '</p>' : ''}
+                    ${event.location ? '<p class="card-location"><i data-lucide="map-pin" class="meta-icon"></i>' + event.location + (event.city ? ', ' + capitalizeWords(event.city) : '') + '</p>' : ''}
                 </div>
             </div>
         `;
@@ -280,6 +275,7 @@ function renderEvents() {
     }
 
     lucide.createIcons();
+    updateFilterCardLabels();
 }
 
 // --- RSVP (stays localStorage) ---
@@ -314,10 +310,12 @@ document.getElementById('detail-going-card').addEventListener('click', () => {
 });
 
 document.getElementById('back-to-events').addEventListener('click', () => {
-    eventDetailView.style.display  = 'none';
-    pageHeader.style.display       = 'flex';
-    categoriesSection.style.display = 'flex';
-    eventsMain.style.display       = 'block';
+    eventDetailView.style.display     = 'none';
+    pageHeader.style.display          = 'flex';
+    categoriesSection.style.display   = 'flex';
+    cityFilterContainer.style.display = '';
+    mobileFilters.style.display       = mq.matches ? '' : 'none';
+    eventsMain.style.display          = 'block';
 });
 
 function openEventDetail(event) {
@@ -327,7 +325,7 @@ function openEventDetail(event) {
 
     document.getElementById('detail-title').innerText     = event.title;
     document.getElementById('detail-date-time').innerText = `${formatDate(event.date)} - ${event.time || ''}`;
-    document.getElementById('detail-location').innerText  = (event.location || 'Location TBA') + (event.city ? `, ${event.city}` : '');
+    document.getElementById('detail-location').innerText  = (event.location || 'Location TBA') + (event.city ? `, ${capitalizeWords(event.city)}` : '');
     document.getElementById('detail-price').innerText     = event.price || 'Free';
 
     document.getElementById('detail-description').innerHTML = event.description
@@ -337,10 +335,12 @@ function openEventDetail(event) {
     currentDetailEventId = event.id;
     updateGoingUI(event);
 
-    pageHeader.style.display        = 'none';
-    categoriesSection.style.display = 'none';
-    eventsMain.style.display        = 'none';
-    eventDetailView.style.display   = 'block';
+    pageHeader.style.display          = 'none';
+    categoriesSection.style.display   = 'none';
+    cityFilterContainer.style.display = 'none';
+    mobileFilters.style.display       = 'none';
+    eventsMain.style.display          = 'none';
+    eventDetailView.style.display     = 'block';
     window.scrollTo(0, 0);
 }
 
@@ -348,31 +348,91 @@ function openEventDetail(event) {
 filterContainer.addEventListener('click', (e) => {
     const btn = e.target.closest('.filter-pill');
     if (btn) {
+        myEventsBtn.classList.remove('active');
         document.querySelectorAll('#filter-container .filter-pill').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         renderEvents();
     }
 });
 
-const cityFilterContainer = document.getElementById('city-filter-container');
-if (cityFilterContainer) {
-    cityFilterContainer.addEventListener('click', (e) => {
-        const btn = e.target.closest('.city-pill');
-        if (!btn) return;
-        const city = btn.getAttribute('data-city');
-        if (city === 'All') {
-            document.querySelectorAll('.city-pill').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        } else {
-            document.querySelector('.city-pill[data-city="All"]').classList.remove('active');
-            btn.classList.toggle('active');
-            if (document.querySelectorAll('.city-pill.active').length === 0) {
-                document.querySelector('.city-pill[data-city="All"]').classList.add('active');
-            }
-        }
-        renderEvents();
+myEventsBtn.addEventListener('click', () => {
+    const wasActive = myEventsBtn.classList.contains('active');
+    myEventsBtn.classList.toggle('active');
+    if (!wasActive) {
+        document.querySelectorAll('#filter-container .filter-pill').forEach(b => b.classList.remove('active'));
+    } else {
+        const allPill = document.querySelector('#filter-container .filter-pill[data-category="All"]');
+        if (allPill) allPill.classList.add('active');
+    }
+    renderEvents();
+});
+
+cityFilterContainer.addEventListener('click', (e) => {
+    const btn = e.target.closest('.city-pill');
+    if (!btn) return;
+    const city = btn.getAttribute('data-city');
+    activeCity = (city === 'All' || city === activeCity) ? '' : city;
+    document.querySelectorAll('.city-pill').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-city') === (activeCity || 'All'));
     });
+    if (activeCity) setUserCityOverride(activeCity);
+    else clearUserCityOverride();
+    document.getElementById('geo-banner').style.display = 'none';
+    renderEvents();
+});
+
+// --- Responsive layout: node-moving between inline sections and mobile panels ---
+const mq                    = window.matchMedia('(max-width: 640px)');
+const appContainer          = filterContainer.parentElement;
+const filterContainerAnchor = filterContainer.nextElementSibling;      // #city-filter-container
+const cityFilterAnchor      = cityFilterContainer.nextElementSibling;  // .mobile-filters
+
+function closeFilterPanel(cardBtn, panel) {
+    cardBtn.setAttribute('aria-expanded', 'false');
+    panel.setAttribute('aria-hidden', 'true');
 }
+
+function toggleFilterPanel(cardBtn, panel) {
+    const isOpen = cardBtn.getAttribute('aria-expanded') === 'true';
+    if (isOpen) {
+        closeFilterPanel(cardBtn, panel);
+    } else {
+        cardBtn.setAttribute('aria-expanded', 'true');
+        panel.setAttribute('aria-hidden', 'false');
+    }
+}
+
+function applyResponsiveLayout(isMobile) {
+    const target = isMobile ? 'mobile' : 'desktop';
+    if (appContainer.dataset.layout !== target) {
+        if (isMobile) {
+            filterPanelCategories.appendChild(filterContainer);
+            filterPanelCities.appendChild(cityFilterContainer);
+        } else {
+            appContainer.insertBefore(filterContainer, filterContainerAnchor);
+            appContainer.insertBefore(cityFilterContainer, cityFilterAnchor);
+            closeFilterPanel(filterCardCategories, filterPanelCategories);
+            closeFilterPanel(filterCardCities, filterPanelCities);
+        }
+        appContainer.dataset.layout = target;
+    }
+    mobileFilters.style.display = isMobile ? '' : 'none';
+}
+
+filterCardCategories.addEventListener('click', () => toggleFilterPanel(filterCardCategories, filterPanelCategories));
+filterCardCities.addEventListener('click',     () => toggleFilterPanel(filterCardCities, filterPanelCities));
+
+function updateFilterCardLabels() {
+    const isMyEvents   = myEventsBtn.classList.contains('active');
+    const activeCatBtn = document.querySelector('#filter-container .filter-pill.active');
+    const catName      = isMyEvents ? 'My Events' : (activeCatBtn?.getAttribute('data-category') || 'All');
+    filterCardCatLabel.textContent  = `Category: ${catName}`;
+
+    filterCardCityLabel.textContent = `City: ${activeCity ? capitalizeWords(activeCity) : 'All Cities'}`;
+}
+
+mq.addEventListener('change', e => applyResponsiveLayout(e.matches));
+applyResponsiveLayout(mq.matches);
 
 // --- Theme toggle ---
 themeToggle.addEventListener('click', () => {
@@ -557,6 +617,27 @@ searchInput.addEventListener('focus', () => {
     if (searchInput.value.trim().length > 0) searchDropdown.style.display = 'flex';
 });
 
+// --- Geo banner ---
+function showGeoBanner(cityName) {
+    document.getElementById('geo-city-name').textContent = cityName;
+    document.getElementById('geo-banner').style.display = '';
+}
+
+document.getElementById('geo-change-btn').addEventListener('click', () => {
+    if (mq.matches) {
+        filterCardCities.setAttribute('aria-expanded', 'true');
+        filterPanelCities.setAttribute('aria-hidden', 'false');
+        filterCardCities.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        cityFilterContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+});
+
+document.getElementById('geo-dismiss-btn').addEventListener('click', () => {
+    document.getElementById('geo-banner').style.display = 'none';
+    sessionStorage.setItem('geoBannerDismissed', '1');
+});
+
 // --- Bootstrap ---
 async function init() {
     lucide.createIcons();
@@ -578,6 +659,20 @@ async function init() {
     events         = (eventsResult.data     || []).map(normalizeEvent);
     citiesData     = citiesResult.data      || [];
     categoriesData = categoriesResult.data  || [];
+
+    // Resolve geo before city pills render so activeCity is set correctly
+    const location = await getVisitorLocation();
+    if (location?.overrideCity) {
+        if (citiesData.some(c => c.name === location.overrideCity)) {
+            activeCity = location.overrideCity;
+        }
+    } else if (location?.lat && !sessionStorage.getItem('geoBannerDismissed')) {
+        const nearest = findNearestCity(location, citiesData);
+        if (nearest) {
+            activeCity = nearest.name;
+            showGeoBanner(nearest.name);
+        }
+    }
 
     renderCategoryFilters();
     renderCityFilters();

@@ -2,6 +2,8 @@ import { requireAdmin, attachSignOutButton } from './auth-guard.js';
 import { fetchAllEvents, fetchCategories, fetchCities, updateEvent, deleteEvent, uploadEventImage } from './db.js';
 import { supabase } from './supabase-client.js';
 
+const capitalizeWords = str => str ? str.replace(/\b\w/g, c => c.toUpperCase()) : str;
+
 // ── Auth gate ─────────────────────────────────────────────────────────────────
 const currentUser = await requireAdmin();
 
@@ -70,7 +72,7 @@ function rebuildCitySelect(keepValue) {
     citiesData.forEach(city => {
         const opt = document.createElement('option');
         opt.value       = city.id;
-        opt.textContent = city.name;
+        opt.textContent = capitalizeWords(city.name);
         editEventCity.appendChild(opt);
     });
     const newOpt = document.createElement('option');

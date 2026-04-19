@@ -42,7 +42,7 @@ const ALLOWED_EXTENSIONS = new Set([
 const ALLOWED_ROOT_FILES = new Set([
     'index.html', 'admin.html', 'edit-event.html', 'inbox.html', 'login.html',
     'app.js', 'admin.js', 'edit-event.js', 'inbox.js', 'login.js',
-    'db.js', 'supabase-client.js', 'auth-guard.js', 'public-config.js',
+    'db.js', 'geo.js', 'supabase-client.js', 'auth-guard.js', 'public-config.js',
     'style.css', 'favicon.ico', 'robots.txt',
 ]);
 

@@ -10,6 +10,7 @@
     --accent-icon: #ffffff;
     --pill-bg: #cccccc;
     --pill-text: #1a1a1a;
+    --border-color: #d0d0d0;
     --bottom-nav-bg: #121212;
     --bottom-nav-icon: #bbbbbb;
     --icon-hover: #ffffff;
@@ -40,6 +41,7 @@
     --accent-icon: #f5f5fa;
     --pill-bg: #231d3f;
     --pill-text: #f5f5fa;
+    --border-color: #2a2a3f;
     --bottom-nav-bg: #050410;
     --bottom-nav-icon: #a09eb6;
     --icon-hover: #ec4899;
@@ -276,16 +278,14 @@ body {
 .filter-pill[data-category="Music"] { background: var(--cat-Music); color: var(--icon-Music); }
 .filter-pill[data-category="Entertainment"] { background: var(--cat-Entertainment); color: var(--icon-Entertainment); }
 
-.my-events-btn {
-    background: #ff4757 !important;
-    color: white !important;
-    border: none !important;
-    opacity: 1 !important;
-    box-shadow: 0 4px 10px rgba(255, 71, 87, 0.4);
+#my-events-btn.active {
+    background: #ff4757;
+    color: #fff;
+    box-shadow: 0 4px 10px rgba(255, 71, 87, 0.35);
 }
-[data-theme='dark'] .my-events-btn {
-    background: #ff6b81 !important;
-    color: white !important;
+[data-theme='dark'] #my-events-btn.active {
+    background: #ff6b81;
+    color: #fff;
     box-shadow: 0 4px 10px rgba(255, 107, 129, 0.3);
 }
 
@@ -458,15 +458,23 @@ body {
     height: 12px;
 }
 
-/* Floating Action Button */
-.fab-btn {
+/* Floating Action Button cluster */
+.fab-cluster {
     position: fixed;
     bottom: 30px;
     right: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    z-index: 50;
+}
+
+.fab-btn {
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: #666666; /* darker grey */
+    background: #666666;
     color: #ffffff;
     border: none;
     display: flex;
@@ -474,23 +482,38 @@ body {
     justify-content: center;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    z-index: 50;
     transition: transform 0.2s ease, background 0.3s ease;
 }
 .fab-btn:hover {
     transform: scale(1.05);
-    background: #444444;
 }
 .fab-btn i {
     width: 24px;
     height: 24px;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4)); /* small icon shadow */
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
 }
-[data-theme='dark'] .fab-btn {
-    background: #444444;
+
+.fab-primary { background: #666666; }
+.fab-primary:hover { background: #444444; }
+[data-theme='dark'] .fab-primary { background: #444444; }
+[data-theme='dark'] .fab-primary:hover { background: #222222; }
+
+.fab-secondary {
+    width: 44px;
+    height: 44px;
+    background: var(--pill-bg);
+    color: var(--text-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
-[data-theme='dark'] .fab-btn:hover {
-    background: #222222;
+.fab-secondary:hover {
+    background: var(--accent-color);
+    color: #fff;
+    transform: scale(1.05);
+}
+.fab-secondary i {
+    width: 20px;
+    height: 20px;
+    filter: none;
 }
 
 /* Bottom Navigation */
@@ -824,4 +847,148 @@ body {
     font-size: 14px;
     line-height: 1.6;
     color: var(--text-muted);
+}
+
+/* ── Geo banner ─────────────────────────────────────────────────────────────── */
+#geo-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    background: var(--pill-bg);
+    font-size: 13px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
+}
+#geo-banner strong {
+    color: var(--text-color);
+    font-weight: 600;
+}
+#geo-change-btn {
+    margin-left: auto;
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+    transition: color 0.2s, border-color 0.2s;
+}
+#geo-change-btn:hover {
+    color: var(--text-color);
+    border-color: var(--text-color);
+}
+#geo-dismiss-btn {
+    background: none;
+    border: none;
+    font-size: 18px;
+    line-height: 1;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0 2px;
+    transition: color 0.2s;
+}
+#geo-dismiss-btn:hover { color: var(--text-color); }
+
+/* ── Mobile collapsible filter cards ────────────────────────────────────────── */
+.mobile-filters {
+    padding: 0 20px;
+    margin: 8px 0 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.filter-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 12px 16px;
+    background: var(--pill-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    cursor: pointer;
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 500;
+    text-align: left;
+    transition: background 0.2s, border-color 0.2s;
+}
+.filter-card:hover {
+    background: var(--accent-color);
+    color: #fff;
+    border-color: transparent;
+}
+.filter-card i {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    transition: transform 0.25s ease;
+}
+.filter-card[aria-expanded="true"] i {
+    transform: rotate(180deg);
+}
+
+.filter-panel[aria-hidden="true"] { display: none; }
+.filter-panel {
+    padding: 8px 0 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.filter-panel::-webkit-scrollbar { display: none; }
+
+/* ── Bottom-sheet modals on mobile ──────────────────────────────────────────── */
+@media (max-width: 640px) {
+    .modal-overlay {
+        align-items: flex-end;
+    }
+    .modal-content {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 24px 24px 0 0;
+        max-height: 90vh;
+        overflow-y: auto;
+        transform: translateY(100%);
+    }
+    .modal-overlay.active .modal-content {
+        transform: translateY(0);
+    }
+    .mobile-filters { display: flex; }
+}
+
+/* ── Tablet ≥ 641px ──────────────────────────────────────────────────────────── */
+@media (min-width: 641px) {
+    .mobile-filters { display: none !important; }
+    .events-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+}
+
+/* ── Desktop ≥ 961px ─────────────────────────────────────────────────────────── */
+@media (min-width: 961px) {
+    .app-container {
+        max-width: 960px;
+        margin: 0 auto;
+        box-shadow: 0 0 40px rgba(0,0,0,0.15);
+    }
+    .header {
+        padding: 32px 32px 24px;
+    }
+    .categories {
+        padding: 0 32px;
+    }
+    .events-main {
+        padding: 24px 32px;
+    }
+    #geo-banner {
+        padding: 8px 32px;
+    }
+    .events-grid {
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    }
 }
