@@ -1,17 +1,27 @@
+// Run with: SUPABASE_SERVICE_ROLE_KEY=sb_secret_... node scripts/seed-events.js
+// DO NOT save the service role key to .env — pass it at the command line only.
+
 const path = require('path');
+// Load .env for SUPABASE_URL only — SERVICE_ROLE_KEY must come from the shell environment
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
-const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_URL     = process.env.SUPABASE_URL;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
-    console.error('ERROR: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing from .env');
-    console.error('Add SUPABASE_SERVICE_ROLE_KEY=sb_secret_... to your .env file, then re-run.');
+if (!SUPABASE_URL) {
+    console.error('ERROR: SUPABASE_URL is missing. Check your .env file.');
+    process.exit(1);
+}
+
+if (!SERVICE_ROLE_KEY) {
+    console.error('ERROR: SUPABASE_SERVICE_ROLE_KEY is not set.');
+    console.error('Pass it at runtime — do NOT add it to .env:');
+    console.error('  SUPABASE_SERVICE_ROLE_KEY=sb_secret_... node scripts/seed-events.js');
     process.exit(1);
 }
 
 if (SERVICE_ROLE_KEY.startsWith('sb_publishable_')) {
-    console.error('ERROR: You pasted the publishable key instead of the service role (secret) key.');
+    console.error('ERROR: You passed the publishable key instead of the service role (secret) key.');
     console.error('The service role key starts with sb_secret_ and is found under Project Settings → API → Secret keys.');
     process.exit(1);
 }

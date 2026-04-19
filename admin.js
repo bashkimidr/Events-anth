@@ -1,181 +1,216 @@
-// Initialize Icons
+import { requireAdmin, attachSignOutButton } from './auth-guard.js';
+import { fetchCategories, fetchCities, createEvent, uploadEventImage } from './db.js';
+import { supabase } from './supabase-client.js';
+
+// ── Auth gate ─────────────────────────────────────────────────────────────────
+const currentUser = await requireAdmin();
+
 lucide.createIcons();
+attachSignOutButton('#signout-btn');
+document.getElementById('admin-email').textContent = currentUser.email;
 
-// Elements
+// ── State ─────────────────────────────────────────────────────────────────────
+let categoriesData = [];
+let citiesData     = [];
+
+// ── DOM refs ──────────────────────────────────────────────────────────────────
 const eventCategorySelect = document.getElementById('event-category');
-const newCategoryGroup = document.getElementById('new-category-group');
-const newCategoryName = document.getElementById('new-category-name');
-const eventCitySelect = document.getElementById('event-city');
-const newCityGroup = document.getElementById('new-city-group');
-const newCityName = document.getElementById('new-city-name');
-const saveEventBtn = document.getElementById('save-event');
+const newCategoryGroup    = document.getElementById('new-category-group');
+const newCategoryName     = document.getElementById('new-category-name');
+const eventCitySelect     = document.getElementById('event-city');
+const newCityGroup        = document.getElementById('new-city-group');
+const newCityName         = document.getElementById('new-city-name');
+const saveEventBtn        = document.getElementById('save-event');
+const formMessage         = document.getElementById('form-message');
 
-let categoriesData = JSON.parse(localStorage.getItem('app_categoriesData')) || ['Sports', 'Education', 'Music', 'Entertainment'];
-
-// Category Selector Logic
-eventCategorySelect.addEventListener('change', (e) => {
-    if (e.target.value === 'NEW') {
-        newCategoryGroup.style.display = 'block';
-    } else {
-        newCategoryGroup.style.display = 'none';
-        newCategoryName.value = '';
-    }
-});
-
-// Sync Select Dropdown with categories currently in storage
-function syncCategoryDropdown() {
-    // Clear all existing options except the last "NEW" one
-    while (eventCategorySelect.options.length > 1) {
-        eventCategorySelect.remove(0);
-    }
-    categoriesData.forEach(cat => {
-        const opt = document.createElement('option');
-        opt.value = cat;
-        opt.innerText = cat;
-        // Insert right before the "NEW" option
-        eventCategorySelect.insertBefore(opt, eventCategorySelect.lastElementChild);
-    });
-    eventCategorySelect.value = categoriesData[0] || 'NEW';
-}
-syncCategoryDropdown();
-
-// City Selector Logic
-eventCitySelect.addEventListener('change', (e) => {
-    if (e.target.value === 'NEW') {
-        newCityGroup.style.display = 'block';
-    } else {
-        newCityGroup.style.display = 'none';
-        newCityName.value = '';
-    }
-});
-
-function syncCityDropdown() {
-    while (eventCitySelect.options.length > 1) {
-        eventCitySelect.remove(0);
-    }
-
-    let allEvents = JSON.parse(localStorage.getItem('app_events')) || [];
-    const capitalize = (str) => {
-        if (!str) return '';
-        return str.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-    };
-
-    const uniqueCities = new Set();
-    allEvents.forEach(ev => {
-        if (ev.city) uniqueCities.add(capitalize(ev.city.trim()));
-    });
-
-    const citiesArray = Array.from(uniqueCities).sort();
-    citiesArray.forEach(city => {
-        const opt = document.createElement('option');
-        opt.value = city;
-        opt.innerText = city;
-        eventCitySelect.insertBefore(opt, eventCitySelect.lastElementChild);
-    });
-
-    if (citiesArray.length > 0) {
-        eventCitySelect.value = citiesArray[0];
-    } else {
-        eventCitySelect.value = 'NEW';
-        newCityGroup.style.display = 'block';
+// ── Inline feedback ───────────────────────────────────────────────────────────
+function showMessage(text, type = 'success') {
+    formMessage.textContent   = text;
+    formMessage.className     = type;
+    formMessage.style.display = 'block';
+    if (type === 'success') {
+        setTimeout(() => { formMessage.style.display = 'none'; }, 4000);
     }
 }
-syncCityDropdown();
 
-saveEventBtn.addEventListener('click', async () => {
-    const title = document.getElementById('event-title').value.trim();
-    let category = eventCategorySelect.value;
-    const date = document.getElementById('event-date').value;
-    const time = document.getElementById('event-time').value;
-    const location = document.getElementById('event-location').value.trim();
-    let city = eventCitySelect.value;
-    if (city === 'NEW') {
-        const custom = newCityName.value.trim();
-        if (!custom) {
-            alert('Please enter a new city name.');
-            return;
-        }
-        city = custom.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-    }
-    const price = document.getElementById('event-price').value.trim();
-    const description = document.getElementById('event-description').value.trim();
+function clearMessage() {
+    formMessage.style.display = 'none';
+    formMessage.textContent   = '';
+    formMessage.className     = '';
+}
 
-    const imageInput = document.getElementById('event-image-file').files[0];
-    let image = '';
-    if (imageInput) {
-        try {
-            const base64 = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = e => resolve(e.target.result);
-                reader.onerror = reject;
-                reader.readAsDataURL(imageInput);
-            });
-            const res = await fetch('/upload', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ image: base64, filename: imageInput.name })
-            });
-            const data = await res.json();
-            if (data.url) {
-                image = data.url;
-            }
-        } catch(err) {
-            console.error("Image upload failed", err);
-        }
-    }
+// ── Slug helper ───────────────────────────────────────────────────────────────
+function toSlug(text) {
+    return text.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+}
 
-    if (category === 'NEW') {
-        const newCatVal = newCategoryName.value.trim();
-        if(!newCatVal) {
-            alert('Please enter a name for the new category.');
-            return;
-        }
-        category = newCatVal.charAt(0).toUpperCase() + newCatVal.slice(1);
+// ── Populate dropdowns from DB ────────────────────────────────────────────────
+async function loadDropdowns() {
+    const [catResult, cityResult] = await Promise.all([fetchCategories(), fetchCities()]);
 
-        if(!categoriesData.includes(category)) {
-            categoriesData.push(category);
-            localStorage.setItem('app_categoriesData', JSON.stringify(categoriesData));
-        }
-    }
-
-    if(!title || !date || !time || !location || !city) {
-        alert('Please fill out Title, City, Date, Time, and Location');
+    if (catResult.error || cityResult.error) {
+        showMessage('Failed to load categories/cities from the database.', 'error');
         return;
     }
 
-    let events = JSON.parse(localStorage.getItem('app_events')) || [];
+    categoriesData = catResult.data  || [];
+    citiesData     = cityResult.data || [];
 
-    const newEvent = {
-        id: (events.length > 0 ? Math.max(...events.map(e => e.id)) : 0) + 1,
-        title,
-        category,
-        date,
-        time,
-        location,
-        city,
-        price,
-        description,
-        baseGoing: Math.floor(Math.random() * 50) + 1,
-        image
-    };
+    eventCategorySelect.innerHTML = '';
+    categoriesData.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value       = cat.id;
+        opt.textContent = cat.name;
+        eventCategorySelect.appendChild(opt);
+    });
+    const newCatOpt = document.createElement('option');
+    newCatOpt.value       = 'NEW';
+    newCatOpt.textContent = '-- Add New Category --';
+    eventCategorySelect.appendChild(newCatOpt);
 
-    events.push(newEvent);
-    localStorage.setItem('app_events', JSON.stringify(events));
+    eventCitySelect.innerHTML = '';
+    citiesData.forEach(city => {
+        const opt = document.createElement('option');
+        opt.value       = city.id;
+        opt.textContent = city.name;
+        eventCitySelect.appendChild(opt);
+    });
+    const newCityOpt = document.createElement('option');
+    newCityOpt.value       = 'NEW';
+    newCityOpt.textContent = '-- Add New City --';
+    eventCitySelect.appendChild(newCityOpt);
+}
 
-    alert('Event successfully published into the system!');
+await loadDropdowns();
 
-    document.getElementById('event-title').value = '';
-    document.getElementById('event-date').value = '';
-    document.getElementById('event-time').value = '';
-    document.getElementById('event-location').value = '';
-    document.getElementById('event-price').value = '';
-    document.getElementById('event-description').value = '';
-    document.getElementById('event-image-file').value = '';
+// ── Show/hide new-entry inputs ────────────────────────────────────────────────
+eventCategorySelect.addEventListener('change', () => {
+    const isNew = eventCategorySelect.value === 'NEW';
+    newCategoryGroup.style.display = isNew ? 'block' : 'none';
+    if (!isNew) newCategoryName.value = '';
+});
 
+eventCitySelect.addEventListener('change', () => {
+    const isNew = eventCitySelect.value === 'NEW';
+    newCityGroup.style.display = isNew ? 'block' : 'none';
+    if (!isNew) newCityName.value = '';
+});
+
+// ── Publish handler ───────────────────────────────────────────────────────────
+saveEventBtn.addEventListener('click', async () => {
+    clearMessage();
+
+    // Validate required fields
+    const fields = [
+        ['event-title',       'Event Title'],
+        ['event-date',        'Date'],
+        ['event-time',        'Time'],
+        ['event-location',    'Location'],
+        ['event-price',       'Price'],
+        ['event-description', 'Description'],
+    ];
+    const vals = {};
+    for (const [id, label] of fields) {
+        const el  = document.getElementById(id);
+        const val = el.value.trim();
+        if (!val) {
+            el.focus();
+            showMessage(`${label} is required.`, 'error');
+            return;
+        }
+        vals[id] = val;
+    }
+
+    // Resolve category
+    let categoryId;
+    if (eventCategorySelect.value === 'NEW') {
+        const rawName = newCategoryName.value.trim();
+        if (!rawName) {
+            newCategoryName.focus();
+            showMessage('New category name is required.', 'error');
+            return;
+        }
+        const name = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+        const { data: newCat, error: catErr } = await supabase
+            .from('categories')
+            .insert([{ name, slug: toSlug(name) }])
+            .select()
+            .single();
+        if (catErr) { showMessage('Failed to create category: ' + catErr.message, 'error'); return; }
+        categoryId = newCat.id;
+        categoriesData.push(newCat);
+    } else {
+        categoryId = eventCategorySelect.value;
+        if (!categoryId) { showMessage('Please select a category.', 'error'); return; }
+    }
+
+    // Resolve city
+    let cityId;
+    if (eventCitySelect.value === 'NEW') {
+        const rawName = newCityName.value.trim();
+        if (!rawName) {
+            newCityName.focus();
+            showMessage('New city name is required.', 'error');
+            return;
+        }
+        const name = rawName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+        const { data: newCity, error: cityErr } = await supabase
+            .from('cities')
+            .insert([{ name, slug: toSlug(name) }])
+            .select()
+            .single();
+        if (cityErr) { showMessage('Failed to create city: ' + cityErr.message, 'error'); return; }
+        cityId = newCity.id;
+        citiesData.push(newCity);
+    } else {
+        cityId = eventCitySelect.value;
+        if (!cityId) { showMessage('Please select a city.', 'error'); return; }
+    }
+
+    // Upload image if provided
+    let image_url = '';
+    const imageFile = document.getElementById('event-image-file').files[0];
+    if (imageFile) {
+        const { data: imgData, error: imgErr } = await uploadEventImage(imageFile);
+        if (imgErr) { showMessage('Image upload failed: ' + imgErr.message, 'error'); return; }
+        image_url = imgData.publicUrl;
+    }
+
+    saveEventBtn.disabled    = true;
+    saveEventBtn.textContent = 'Publishing…';
+
+    const { error } = await createEvent({
+        title:       vals['event-title'],
+        description: vals['event-description'],
+        event_date:  vals['event-date'],
+        event_time:  vals['event-time'],
+        location:    vals['event-location'],
+        price:       vals['event-price'],
+        image_url,
+        category_id: categoryId,
+        city_id:     cityId,
+        status:      'published',
+        base_going:  Math.floor(Math.random() * 50) + 1,
+    });
+
+    saveEventBtn.disabled    = false;
+    saveEventBtn.textContent = 'Publish Event';
+
+    if (error) {
+        showMessage('Failed to publish event: ' + error.message, 'error');
+        return;
+    }
+
+    showMessage('Event published!', 'success');
+
+    // Reset form
+    ['event-title', 'event-date', 'event-time', 'event-location',
+     'event-price', 'event-description', 'event-image-file',
+     'new-category-name', 'new-city-name'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
     newCategoryGroup.style.display = 'none';
-    newCityGroup.style.display = 'none';
-    newCategoryName.value = '';
-    newCityName.value = '';
-    syncCategoryDropdown();
-    syncCityDropdown();
+    newCityGroup.style.display     = 'none';
+    await loadDropdowns();
 });

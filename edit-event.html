@@ -5,24 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Discovery - Change Event</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { padding: 40px; background: var(--bg-color); color: var(--text-color); }
-        .admin-container { 
-            max-width: 600px; 
-            margin: 0 auto; 
-            background: var(--card-bg); 
-            padding: 30px; 
-            border-radius: var(--card-radius); 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        .admin-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: var(--card-radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .admin-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 24px; 
-            border-bottom: 1px solid var(--border-color); 
-            padding-bottom: 16px; 
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
         .admin-header a {
             display: flex;
@@ -34,88 +37,137 @@
             transition: color 0.2s;
         }
         .admin-header a:hover { color: var(--text-color); }
+        .admin-signed-in {
+            width: 100%;
+            font-size: 13px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #signout-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 2px 10px;
+            font-size: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-family: inherit;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        #signout-btn:hover { color: #e53935; border-color: #e53935; }
+        #form-message {
+            display: none;
+            margin-top: 14px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            text-align: center;
+        }
+        #form-message.success { background: #e8f5e9; color: #2e7d32; }
+        #form-message.error   { background: #fdecea; color: #c62828; }
+        #current-image-preview {
+            display: none;
+            max-width: 100%;
+            max-height: 180px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            object-fit: cover;
+        }
     </style>
 </head>
 <body data-theme="">
     <div class="admin-container form-body" id="admin-change-event-container">
         <div class="admin-header">
             <h2>Admin: Change Event</h2>
-            <div style="display: flex; gap: 16px;">
-                <a href="admin.html"><i data-lucide="plus-circle" style="width: 14px;"></i> Create Event</a>
-                <a href="inbox.html"><i data-lucide="inbox" style="width: 14px;"></i> View Inbox</a>
-                <a href="index.html"><i data-lucide="arrow-left" style="width: 14px;"></i> App</a>
+            <div style="display:flex; gap:16px;">
+                <a href="admin.html"><i data-lucide="plus-circle" style="width:14px;"></i> Create Event</a>
+                <a href="inbox.html"><i data-lucide="inbox" style="width:14px;"></i> View Inbox</a>
+                <a href="index.html"><i data-lucide="arrow-left" style="width:14px;"></i> App</a>
             </div>
-        </div>
-        
-        <!-- Search bar for selecting event -->
-        <div class="form-group" style="position: relative;">
-            <label>Search Existing Event</label>
-            <input type="text" id="edit-search-input" placeholder="Type to search events..." style="background: var(--bg-color);">
-            <div id="edit-search-dropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; z-index: 100; max-height: 250px; overflow-y: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin-top: 4px; flex-direction: column;">
-                <!-- Filled dynamically by edit-event.js -->
+            <div class="admin-signed-in">
+                Signed in as <strong id="admin-email">…</strong>
+                <button id="signout-btn">Sign Out</button>
             </div>
         </div>
 
-        <!-- Hidden until an event is selected -->
-        <div id="edit-form-wrap" style="display: none;">
-            <hr style="border: 0; border-top: 1px dashed var(--border-color); margin: 24px 0;">
+        <!-- Search bar -->
+        <div class="form-group" style="position:relative;">
+            <label>Search Existing Event</label>
+            <input type="text" id="edit-search-input" placeholder="Type to search events…"
+                   style="background:var(--bg-color);">
+            <div id="edit-search-dropdown"
+                 style="display:none;position:absolute;top:100%;left:0;right:0;
+                        background:var(--card-bg);border:1px solid var(--border-color);
+                        border-radius:8px;z-index:100;max-height:250px;overflow-y:auto;
+                        box-shadow:0 4px 12px rgba(0,0,0,0.1);margin-top:4px;flex-direction:column;">
+            </div>
+        </div>
+
+        <!-- Edit form — hidden until an event is selected -->
+        <div id="edit-form-wrap" style="display:none;">
+            <hr style="border:0;border-top:1px dashed var(--border-color);margin:24px 0;">
             <input type="hidden" id="edit-event-id">
-            
+
             <div class="form-group">
                 <label>Event Title</label>
-                <input type="text" id="edit-event-title" required>
+                <input type="text" id="edit-event-title">
             </div>
             <div class="form-group">
                 <label>Category</label>
-                <select id="edit-event-category">
-                    <!-- Populated dynamically -->
-                </select>
+                <select id="edit-event-category"></select>
             </div>
-            <div class="form-group" style="display: flex; gap: 12px;">
-                <div style="flex: 1;">
+            <div class="form-group" style="display:flex; gap:12px;">
+                <div style="flex:1;">
                     <label>Date</label>
-                    <input type="date" id="edit-event-date" required>
+                    <input type="date" id="edit-event-date">
                 </div>
-                <div style="flex: 1;">
+                <div style="flex:1;">
                     <label>Time</label>
-                    <input type="time" id="edit-event-time" required>
+                    <input type="time" id="edit-event-time">
                 </div>
             </div>
-            <div class="form-group" style="display: flex; gap: 12px;">
-                <div style="flex: 2;">
+            <div class="form-group" style="display:flex; gap:12px;">
+                <div style="flex:2;">
                     <label>Location</label>
-                    <input type="text" id="edit-event-location" required>
+                    <input type="text" id="edit-event-location">
                 </div>
-                <div style="flex: 1;">
+                <div style="flex:1;">
                     <label>Price</label>
-                    <input type="text" id="edit-event-price" required>
+                    <input type="text" id="edit-event-price">
                 </div>
             </div>
             <div class="form-group">
                 <label>City</label>
-                <select id="edit-event-city">
-                    <option value="NEW">-- Add New City --</option>
-                </select>
+                <select id="edit-event-city"></select>
             </div>
-            <div class="form-group" id="edit-new-city-group" style="display: none;">
+            <div class="form-group" id="edit-new-city-group" style="display:none;">
                 <label>New City Name</label>
                 <input type="text" id="edit-new-city-name" placeholder="e.g., Miami">
             </div>
             <div class="form-group">
                 <label>Description</label>
-                <textarea id="edit-event-description" style="width: 100%; min-height: 80px; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--card-radius); background: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 14px; resize: vertical;" required></textarea>
+                <textarea id="edit-event-description"
+                    style="width:100%;min-height:80px;padding:12px;border:1px solid var(--border-color);
+                           border-radius:var(--card-radius);background:var(--bg-color);color:var(--text-color);
+                           font-family:inherit;font-size:14px;resize:vertical;box-sizing:border-box;"></textarea>
             </div>
             <div class="form-group">
-                <label>Event Image (Upload new to Replace)</label>
+                <label>Event Image (upload to replace)</label>
+                <img id="current-image-preview" src="" alt="Current image">
                 <input type="file" id="edit-event-image-file" accept="image/*">
             </div>
-            <div class="save-wrap" style="display: flex; gap: 16px;">
-                <button class="save-btn" id="edit-save-event" style="flex: 2;">Save Changes</button>
-                <button class="save-btn" id="edit-delete-event" style="flex: 1; background: #e53935;">Delete Event</button>
+            <div class="save-wrap" style="display:flex; gap:16px;">
+                <button class="save-btn" id="edit-save-event" style="flex:2;">Save Changes</button>
+                <button class="save-btn" id="edit-delete-event"
+                        style="flex:1;background:#e53935;">Delete Event</button>
             </div>
+            <div id="form-message"></div>
         </div>
     </div>
-    
-    <script src="edit-event.js"></script>
+
+    <script src="public-config.js"></script>
+    <script type="module" src="edit-event.js"></script>
 </body>
 </html>

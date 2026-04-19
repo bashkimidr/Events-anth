@@ -3,26 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Event Discovery - Requested Events Inbox</title>
+    <title>Event Discovery - Submissions Inbox</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { padding: 40px; background: var(--bg-color); color: var(--text-color); }
-        .admin-container { 
-            max-width: 600px; 
-            margin: 0 auto; 
-            background: var(--card-bg); 
-            padding: 30px; 
-            border-radius: var(--card-radius); 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        .admin-container {
+            max-width: 640px;
+            margin: 0 auto 40px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: var(--card-radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .admin-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 24px; 
-            border-bottom: 1px solid var(--border-color); 
-            padding-bottom: 16px; 
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
         .admin-header a {
             display: flex;
@@ -34,22 +37,66 @@
             transition: color 0.2s;
         }
         .admin-header a:hover { color: var(--text-color); }
+        .admin-signed-in {
+            width: 100%;
+            font-size: 13px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #signout-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 2px 10px;
+            font-size: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-family: inherit;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        #signout-btn:hover { color: #e53935; border-color: #e53935; }
+        #page-toast {
+            display: none;
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        #page-toast.success { background: #2e7d32; color: #fff; }
+        #page-toast.error   { background: #c62828; color: #fff; }
     </style>
 </head>
 <body data-theme="">
-    <div class="admin-container" style="margin-top: 40px; margin-bottom: 40px;">
+    <div class="admin-container">
         <div class="admin-header">
-            <h2>Requested Events Inbox</h2>
-            <div style="display: flex; gap: 16px;">
-                <a href="admin.html"><i data-lucide="plus-circle" style="width: 14px;"></i> Create Event</a>
-                <a href="index.html"><i data-lucide="arrow-left" style="width: 14px;"></i> Back to App</a>
+            <h2>Submissions Inbox</h2>
+            <div style="display:flex; gap:16px;">
+                <a href="admin.html"><i data-lucide="plus-circle" style="width:14px;"></i> Create Event</a>
+                <a href="edit-event.html"><i data-lucide="edit-3" style="width:14px;"></i> Edit Event</a>
+                <a href="index.html"><i data-lucide="arrow-left" style="width:14px;"></i> Back to App</a>
+            </div>
+            <div class="admin-signed-in">
+                Signed in as <strong id="admin-email">…</strong>
+                <button id="signout-btn">Sign Out</button>
             </div>
         </div>
-        <div id="requested-events-container" style="display:flex; flex-direction:column; gap:16px;">
-            <!-- Requested events will render here -->
+
+        <div id="submissions-container" style="display:flex;flex-direction:column;gap:16px;">
+            <!-- Populated by inbox.js -->
         </div>
     </div>
-    
-    <script src="inbox.js"></script>
+
+    <div id="page-toast"></div>
+
+    <script src="public-config.js"></script>
+    <script type="module" src="inbox.js"></script>
 </body>
 </html>

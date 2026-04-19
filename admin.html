@@ -5,24 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event Discovery - Admin Panel</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { padding: 40px; background: var(--bg-color); color: var(--text-color); }
-        .admin-container { 
-            max-width: 600px; 
-            margin: 0 auto; 
-            background: var(--card-bg); 
-            padding: 30px; 
-            border-radius: var(--card-radius); 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+        .admin-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: var(--card-radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-        .admin-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 24px; 
-            border-bottom: 1px solid var(--border-color); 
-            padding-bottom: 16px; 
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
         .admin-header a {
             display: flex;
@@ -34,81 +37,116 @@
             transition: color 0.2s;
         }
         .admin-header a:hover { color: var(--text-color); }
+        .admin-signed-in {
+            width: 100%;
+            font-size: 13px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        #signout-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 2px 10px;
+            font-size: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-family: inherit;
+            transition: color 0.2s, border-color 0.2s;
+        }
+        #signout-btn:hover { color: #e53935; border-color: #e53935; }
+        #form-message {
+            display: none;
+            margin-top: 14px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            text-align: center;
+        }
+        #form-message.success { background: #e8f5e9; color: #2e7d32; }
+        #form-message.error   { background: #fdecea; color: #c62828; }
     </style>
 </head>
 <body data-theme="">
     <div class="admin-container form-body">
         <div class="admin-header">
             <h2>Admin: Create Event</h2>
-            <div style="display: flex; gap: 16px;">
-                <a href="edit-event.html"><i data-lucide="edit-3" style="width: 14px;"></i> Edit Event</a>
-                <a href="inbox.html"><i data-lucide="inbox" style="width: 14px;"></i> View Inbox</a>
-                <a href="index.html"><i data-lucide="arrow-left" style="width: 14px;"></i> Back to App</a>
+            <div style="display:flex; gap:16px;">
+                <a href="edit-event.html"><i data-lucide="edit-3" style="width:14px;"></i> Edit Event</a>
+                <a href="inbox.html"><i data-lucide="inbox" style="width:14px;"></i> View Inbox</a>
+                <a href="index.html"><i data-lucide="arrow-left" style="width:14px;"></i> Back to App</a>
+            </div>
+            <div class="admin-signed-in">
+                Signed in as <strong id="admin-email">…</strong>
+                <button id="signout-btn">Sign Out</button>
             </div>
         </div>
+
         <div class="form-group">
             <label>Event Title</label>
-            <input type="text" id="event-title" placeholder="e.g., Summer Music Festival" required>
+            <input type="text" id="event-title" placeholder="e.g., Summer Music Festival">
         </div>
         <div class="form-group">
             <label>Category</label>
             <select id="event-category">
-                <option value="Sports">Sports</option>
-                <option value="Education">Education</option>
-                <option value="Music">Music</option>
-                <option value="Entertainment">Entertainment</option>
-                <option value="NEW">-- Add New Category --</option>
+                <option value="">Loading…</option>
             </select>
         </div>
-        <div class="form-group" id="new-category-group" style="display: none;">
+        <div class="form-group" id="new-category-group" style="display:none;">
             <label>New Category Name</label>
             <input type="text" id="new-category-name" placeholder="e.g., Tech">
-            <label style="margin-top: 12px; display: block;">Category Custom Icon (optional)</label>
-            <input type="file" id="new-category-icon" accept="image/*">
         </div>
-        <div class="form-group" style="display: flex; gap: 12px;">
-            <div style="flex: 1;">
+        <div class="form-group" style="display:flex; gap:12px;">
+            <div style="flex:1;">
                 <label>Date</label>
-                <input type="date" id="event-date" required>
+                <input type="date" id="event-date">
             </div>
-            <div style="flex: 1;">
+            <div style="flex:1;">
                 <label>Time</label>
-                <input type="time" id="event-time" required>
+                <input type="time" id="event-time">
             </div>
         </div>
-        <div class="form-group" style="display: flex; gap: 12px;">
-            <div style="flex: 2;">
+        <div class="form-group" style="display:flex; gap:12px;">
+            <div style="flex:2;">
                 <label>Location</label>
-                <input type="text" id="event-location" placeholder="e.g., Central Park" required>
+                <input type="text" id="event-location" placeholder="e.g., Central Park">
             </div>
-            <div style="flex: 1;">
+            <div style="flex:1;">
                 <label>Price</label>
-                <input type="text" id="event-price" placeholder="e.g., Free, $20" required>
+                <input type="text" id="event-price" placeholder="e.g., Free, $20">
             </div>
         </div>
         <div class="form-group">
             <label>City</label>
             <select id="event-city">
-                <option value="NEW">-- Add New City --</option>
+                <option value="">Loading…</option>
             </select>
         </div>
-        <div class="form-group" id="new-city-group" style="display: none;">
+        <div class="form-group" id="new-city-group" style="display:none;">
             <label>New City Name</label>
             <input type="text" id="new-city-name" placeholder="e.g., Miami">
         </div>
         <div class="form-group">
             <label>Description</label>
-            <textarea id="event-description" placeholder="A detailed description of the event..." style="width: 100%; min-height: 80px; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--card-radius); background: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 14px; resize: vertical;" required></textarea>
+            <textarea id="event-description"
+                placeholder="A detailed description of the event…"
+                style="width:100%;min-height:80px;padding:12px;border:1px solid var(--border-color);
+                       border-radius:var(--card-radius);background:var(--bg-color);color:var(--text-color);
+                       font-family:inherit;font-size:14px;resize:vertical;box-sizing:border-box;"></textarea>
         </div>
         <div class="form-group">
-            <label>Event Image (Local Upload)</label>
+            <label>Event Image</label>
             <input type="file" id="event-image-file" accept="image/*">
         </div>
         <div class="save-wrap">
             <button class="save-btn" id="save-event">Publish Event</button>
         </div>
-    </div>    </div>
-    
-    <script src="admin.js"></script>
+        <div id="form-message"></div>
+    </div>
+
+    <script src="public-config.js"></script>
+    <script type="module" src="admin.js"></script>
 </body>
 </html>

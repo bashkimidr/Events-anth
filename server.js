@@ -1,6 +1,16 @@
 const http = require('http');
-const fs = require('fs');
+const fs   = require('fs');
 const path = require('path');
+
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+
+// If the token is absent at startup, generate a one-time in-memory value so the
+// guard still works — but log a warning so the operator knows to set it properly.
+const UPLOAD_TOKEN = process.env.ADMIN_UPLOAD_PLACEHOLDER_TOKEN || (() => {
+    const t = require('crypto').randomBytes(24).toString('hex');
+    console.warn('[server] ADMIN_UPLOAD_PLACEHOLDER_TOKEN not set in .env — generated ephemeral token for this process.');
+    return t;
+})();
 
 const PORT = 3000;
 const MIME_TYPES = {
@@ -17,7 +27,12 @@ const MIME_TYPES = {
 
 http.createServer((req, res) => {
     // 1. Handle our Custom File Upload Endpoint
+    // TODO: delete this endpoint once all admin image uploads go through Supabase Storage.
     if (req.method === 'POST' && req.url === '/upload') {
+        if (req.headers['x-admin-check'] !== UPLOAD_TOKEN) {
+            res.writeHead(403, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ error: 'Forbidden' }));
+        }
         let body = '';
         req.on('data', chunk => body += chunk.toString());
         req.on('end', () => {
