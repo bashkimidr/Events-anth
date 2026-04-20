@@ -95,7 +95,7 @@
 
         <!-- Search bar -->
         <div class="form-group" style="position:relative;">
-            <label>Search Existing Event</label>
+            <label for="edit-search-input">Search Existing Event</label>
             <input type="text" id="edit-search-input" placeholder="Type to search events…"
                    style="background:var(--bg-color);">
             <div id="edit-search-dropdown"
@@ -112,50 +112,50 @@
             <input type="hidden" id="edit-event-id">
 
             <div class="form-group">
-                <label>Event Title</label>
+                <label for="edit-event-title">Event Title</label>
                 <input type="text" id="edit-event-title">
             </div>
             <div class="form-group">
-                <label>Category</label>
+                <label for="edit-event-category">Category</label>
                 <select id="edit-event-category"></select>
             </div>
             <div class="form-group" style="display:flex; gap:12px;">
                 <div style="flex:1;">
-                    <label>Date</label>
+                    <label for="edit-event-date">Date</label>
                     <input type="date" id="edit-event-date">
                 </div>
                 <div style="flex:1;">
-                    <label>Time</label>
+                    <label for="edit-event-time">Time</label>
                     <input type="time" id="edit-event-time">
                 </div>
             </div>
             <div class="form-group" style="display:flex; gap:12px;">
                 <div style="flex:2;">
-                    <label>Location</label>
+                    <label for="edit-event-location">Location</label>
                     <input type="text" id="edit-event-location">
                 </div>
                 <div style="flex:1;">
-                    <label>Price</label>
+                    <label for="edit-event-price">Price</label>
                     <input type="text" id="edit-event-price">
                 </div>
             </div>
             <div class="form-group">
-                <label>City</label>
+                <label for="edit-event-city">City</label>
                 <select id="edit-event-city"></select>
             </div>
             <div class="form-group" id="edit-new-city-group" style="display:none;">
-                <label>New City Name</label>
+                <label for="edit-new-city-name">New City Name</label>
                 <input type="text" id="edit-new-city-name" placeholder="e.g., Miami">
             </div>
             <div class="form-group">
-                <label>Description</label>
+                <label for="edit-event-description">Description</label>
                 <textarea id="edit-event-description"
                     style="width:100%;min-height:80px;padding:12px;border:1px solid var(--border-color);
                            border-radius:var(--card-radius);background:var(--bg-color);color:var(--text-color);
                            font-family:inherit;font-size:14px;resize:vertical;box-sizing:border-box;"></textarea>
             </div>
             <div class="form-group">
-                <label>Event Image (upload to replace)</label>
+                <label for="edit-event-image-file">Event Image (upload to replace)</label>
                 <img id="current-image-preview" src="" alt="Current image">
                 <input type="file" id="edit-event-image-file" accept="image/*">
             </div>

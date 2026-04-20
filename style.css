@@ -345,6 +345,7 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
     gap: 16px;
+    padding-bottom: calc(var(--fab-primary-size, 56px) + 48px);
 }
 .event-card {
     border-radius: var(--card-radius);
@@ -458,16 +459,18 @@ body {
     height: 12px;
 }
 
-/* Floating Action Button cluster */
-.fab-cluster {
+/* Floating Action Buttons — opposite corners */
+#theme-toggle {
     position: fixed;
-    bottom: 30px;
-    right: 30px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    z-index: 50;
+    bottom: 24px;
+    left: 24px;
+    z-index: 100;
+}
+#admin-add-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 100;
 }
 
 .fab-btn {
@@ -896,10 +899,21 @@ body {
 /* ── Mobile collapsible filter cards ────────────────────────────────────────── */
 .mobile-filters {
     padding: 0 20px;
-    margin: 8px 0 12px;
+    margin: 12px 0;
     display: flex;
-    flex-direction: column;
-    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+.mobile-filters .filter-card {
+    flex: 0 0 auto;
+    min-width: 140px;
+    max-width: 220px;
+}
+.mobile-filters .filter-panel {
+    flex-basis: 100%;
+    order: 1;
 }
 
 .filter-card {

@@ -1,3 +1,7 @@
+// Primary source: ipwho.is (free, CORS-enabled, no API key, unlimited free tier as of 2026).
+// When deployed behind Cloudflare, swap this fetch for a read of Cloudflare headers passed
+// from server-side. The exported interface does not change.
+
 const GEO_CACHE_KEY     = 'geoCache';
 const CITY_OVERRIDE_KEY = 'userCityOverride';
 const GEO_TIMEOUT_MS    = 2500;
@@ -17,10 +21,14 @@ export async function getVisitorLocation() {
     try {
         const controller = new AbortController();
         const timer      = setTimeout(() => controller.abort(), GEO_TIMEOUT_MS);
-        const res        = await fetch('https://ipapi.co/json/', { signal: controller.signal });
+        const res        = await fetch('https://ipwho.is/', { signal: controller.signal });
         clearTimeout(timer);
         if (!res.ok) return null;
-        const data     = await res.json();
+        const data = await res.json();
+        if (data.success === false) {
+            console.log('geo: lookup unsuccessful');
+            return null;
+        }
         const location = { lat: data.latitude, lon: data.longitude, city: data.city || '' };
         sessionStorage.setItem(GEO_CACHE_KEY, JSON.stringify(location));
         return location;

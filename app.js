@@ -426,9 +426,9 @@ function updateFilterCardLabels() {
     const isMyEvents   = myEventsBtn.classList.contains('active');
     const activeCatBtn = document.querySelector('#filter-container .filter-pill.active');
     const catName      = isMyEvents ? 'My Events' : (activeCatBtn?.getAttribute('data-category') || 'All');
-    filterCardCatLabel.textContent  = `Category: ${catName}`;
+    filterCardCatLabel.textContent  = (catName === 'All') ? 'All Categories' : catName;
 
-    filterCardCityLabel.textContent = `City: ${activeCity ? capitalizeWords(activeCity) : 'All Cities'}`;
+    filterCardCityLabel.textContent = activeCity ? capitalizeWords(activeCity) : 'All Cities';
 }
 
 mq.addEventListener('change', e => applyResponsiveLayout(e.matches));
