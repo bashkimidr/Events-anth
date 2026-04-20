@@ -947,7 +947,7 @@ body {
     flex-shrink: 0;
     transition: transform 0.25s ease;
 }
-.filter-card[aria-expanded="true"] i {
+.filter-card[aria-expanded="true"] .filter-card-chevron {
     transform: rotate(180deg);
 }
 
@@ -975,12 +975,10 @@ body {
     .modal-overlay.active .modal-content {
         transform: translateY(0);
     }
-    .mobile-filters { display: flex; }
 }
 
 /* ── Tablet ≥ 641px ──────────────────────────────────────────────────────────── */
 @media (min-width: 641px) {
-    .mobile-filters { display: none !important; }
     .events-grid {
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     }

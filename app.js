@@ -35,7 +35,6 @@ const saveEvent              = document.getElementById('save-event');
 const eventCategorySelect    = document.getElementById('event-category');
 const eventDetailView        = document.getElementById('event-detail-view');
 const pageHeader             = document.querySelector('.header');
-const categoriesSection      = document.querySelector('.categories');
 const eventsMain             = document.querySelector('.events-main');
 const mobileFilters          = document.getElementById('mobile-filters');
 const filterPanelCategories  = document.getElementById('filter-panel-categories');
@@ -310,12 +309,10 @@ document.getElementById('detail-going-card').addEventListener('click', () => {
 });
 
 document.getElementById('back-to-events').addEventListener('click', () => {
-    eventDetailView.style.display     = 'none';
-    pageHeader.style.display          = 'flex';
-    categoriesSection.style.display   = 'flex';
-    cityFilterContainer.style.display = '';
-    mobileFilters.style.display       = mq.matches ? '' : 'none';
-    eventsMain.style.display          = 'block';
+    eventDetailView.style.display = 'none';
+    pageHeader.style.display      = 'flex';
+    mobileFilters.style.display   = '';
+    eventsMain.style.display      = 'block';
 });
 
 function openEventDetail(event) {
@@ -335,11 +332,9 @@ function openEventDetail(event) {
     currentDetailEventId = event.id;
     updateGoingUI(event);
 
-    pageHeader.style.display          = 'none';
-    categoriesSection.style.display   = 'none';
-    cityFilterContainer.style.display = 'none';
-    mobileFilters.style.display       = 'none';
-    eventsMain.style.display          = 'none';
+    pageHeader.style.display      = 'none';
+    mobileFilters.style.display   = 'none';
+    eventsMain.style.display      = 'none';
     eventDetailView.style.display     = 'block';
     window.scrollTo(0, 0);
 }
@@ -352,6 +347,8 @@ filterContainer.addEventListener('click', (e) => {
         document.querySelectorAll('#filter-container .filter-pill').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         renderEvents();
+        updateCategoryCardVisual(btn.getAttribute('data-category'));
+        closeAllFilterPanels();
     }
 });
 
@@ -365,6 +362,7 @@ myEventsBtn.addEventListener('click', () => {
         if (allPill) allPill.classList.add('active');
     }
     renderEvents();
+    updateCategoryCardVisual(myEventsBtn.classList.contains('active') ? 'MyEvents' : 'All');
 });
 
 cityFilterContainer.addEventListener('click', (e) => {
@@ -379,48 +377,70 @@ cityFilterContainer.addEventListener('click', (e) => {
     else clearUserCityOverride();
     document.getElementById('geo-banner').style.display = 'none';
     renderEvents();
+    updateCityCardVisual(activeCity);
+    closeAllFilterPanels();
 });
 
-// --- Responsive layout: node-moving between inline sections and mobile panels ---
-const mq                    = window.matchMedia('(max-width: 640px)');
-const appContainer          = filterContainer.parentElement;
-const filterContainerAnchor = filterContainer.nextElementSibling;      // #city-filter-container
-const cityFilterAnchor      = cityFilterContainer.nextElementSibling;  // .mobile-filters
-
-function closeFilterPanel(cardBtn, panel) {
-    cardBtn.setAttribute('aria-expanded', 'false');
-    panel.setAttribute('aria-hidden', 'true');
+// --- Filter card panels: exclusive single-panel-open logic ---
+function closeAllFilterPanels() {
+    filterCardCategories.setAttribute('aria-expanded', 'false');
+    filterCardCities.setAttribute('aria-expanded', 'false');
+    filterPanelCategories.setAttribute('aria-hidden', 'true');
+    filterPanelCities.setAttribute('aria-hidden', 'true');
 }
 
-function toggleFilterPanel(cardBtn, panel) {
-    const isOpen = cardBtn.getAttribute('aria-expanded') === 'true';
-    if (isOpen) {
-        closeFilterPanel(cardBtn, panel);
+filterCardCategories.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = filterCardCategories.getAttribute('aria-expanded') === 'true';
+    closeAllFilterPanels();
+    if (!isOpen) {
+        filterCardCategories.setAttribute('aria-expanded', 'true');
+        filterPanelCategories.setAttribute('aria-hidden', 'false');
+    }
+});
+
+filterCardCities.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = filterCardCities.getAttribute('aria-expanded') === 'true';
+    closeAllFilterPanels();
+    if (!isOpen) {
+        filterCardCities.setAttribute('aria-expanded', 'true');
+        filterPanelCities.setAttribute('aria-hidden', 'false');
+    }
+});
+
+function updateCategoryCardVisual(catName) {
+    const iconEl = filterCardCategories.querySelector('.filter-card-icon');
+    if (catName === 'All') {
+        filterCardCategories.style.background  = '';
+        filterCardCategories.style.color       = '';
+        filterCardCategories.style.borderColor = '';
+        if (iconEl) { iconEl.setAttribute('data-lucide', 'layers'); lucide.createIcons({ nodes: [iconEl] }); }
+    } else if (catName === 'MyEvents') {
+        filterCardCategories.style.background  = '';
+        filterCardCategories.style.color       = '';
+        filterCardCategories.style.borderColor = '';
+        if (iconEl) { iconEl.setAttribute('data-lucide', 'heart'); lucide.createIcons({ nodes: [iconEl] }); }
     } else {
-        cardBtn.setAttribute('aria-expanded', 'true');
-        panel.setAttribute('aria-hidden', 'false');
+        filterCardCategories.style.background  = `var(--cat-${catName})`;
+        filterCardCategories.style.color       = `var(--icon-${catName})`;
+        filterCardCategories.style.borderColor = 'transparent';
+        const icon = iconFallbacks[catName] || 'calendar';
+        if (iconEl) { iconEl.setAttribute('data-lucide', icon); lucide.createIcons({ nodes: [iconEl] }); }
     }
 }
 
-function applyResponsiveLayout(isMobile) {
-    const target = isMobile ? 'mobile' : 'desktop';
-    if (appContainer.dataset.layout !== target) {
-        if (isMobile) {
-            filterPanelCategories.appendChild(filterContainer);
-            filterPanelCities.appendChild(cityFilterContainer);
-        } else {
-            appContainer.insertBefore(filterContainer, filterContainerAnchor);
-            appContainer.insertBefore(cityFilterContainer, cityFilterAnchor);
-            closeFilterPanel(filterCardCategories, filterPanelCategories);
-            closeFilterPanel(filterCardCities, filterPanelCities);
-        }
-        appContainer.dataset.layout = target;
+function updateCityCardVisual(cityName) {
+    if (!cityName) {
+        filterCardCities.style.background  = '';
+        filterCardCities.style.color       = '';
+        filterCardCities.style.borderColor = '';
+    } else {
+        filterCardCities.style.background  = 'var(--pill-bg)';
+        filterCardCities.style.color       = 'var(--text-color)';
+        filterCardCities.style.borderColor = 'var(--text-color)';
     }
-    mobileFilters.style.display = isMobile ? '' : 'none';
 }
-
-filterCardCategories.addEventListener('click', () => toggleFilterPanel(filterCardCategories, filterPanelCategories));
-filterCardCities.addEventListener('click',     () => toggleFilterPanel(filterCardCities, filterPanelCities));
 
 function updateFilterCardLabels() {
     const isMyEvents   = myEventsBtn.classList.contains('active');
@@ -430,9 +450,6 @@ function updateFilterCardLabels() {
 
     filterCardCityLabel.textContent = activeCity ? capitalizeWords(activeCity) : 'All Cities';
 }
-
-mq.addEventListener('change', e => applyResponsiveLayout(e.matches));
-applyResponsiveLayout(mq.matches);
 
 // --- Theme toggle ---
 themeToggle.addEventListener('click', () => {
@@ -611,6 +628,9 @@ document.addEventListener('click', (e) => {
     if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
         searchDropdown.style.display = 'none';
     }
+    if (!e.target.closest('#mobile-filters')) {
+        closeAllFilterPanels();
+    }
 });
 
 searchInput.addEventListener('focus', () => {
@@ -624,13 +644,10 @@ function showGeoBanner(cityName) {
 }
 
 document.getElementById('geo-change-btn').addEventListener('click', () => {
-    if (mq.matches) {
-        filterCardCities.setAttribute('aria-expanded', 'true');
-        filterPanelCities.setAttribute('aria-hidden', 'false');
-        filterCardCities.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-        cityFilterContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
+    closeAllFilterPanels();
+    filterCardCities.setAttribute('aria-expanded', 'true');
+    filterPanelCities.setAttribute('aria-hidden', 'false');
+    filterCardCities.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
 document.getElementById('geo-dismiss-btn').addEventListener('click', () => {

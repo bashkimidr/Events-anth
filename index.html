@@ -28,28 +28,25 @@
             <button id="geo-dismiss-btn" aria-label="Dismiss">&times;</button>
         </div>
 
-        <!-- Categories / Filters — populated dynamically from DB via app.js -->
-        <section class="categories" id="filter-container"></section>
-
-        <!-- Cities / Filters -->
-        <section class="categories city-filters" id="city-filter-container" style="margin-top: 12px; padding-top: 0;">
-            <!-- dynamically rendered based on active events -->
-        </section>
-
-        <!-- Mobile collapsible filter cards — panels populated by matchMedia in app.js -->
-        <section class="mobile-filters" id="mobile-filters" style="display:none;">
-            <button class="filter-card" id="filter-card-categories"
+        <!-- Filter cards — always visible on all viewports; pills live inside the panels -->
+        <section class="mobile-filters" id="mobile-filters">
+            <button class="filter-card" id="filter-card-categories" data-category="All"
                     aria-expanded="false" aria-controls="filter-panel-categories">
+                <i data-lucide="layers" class="filter-card-icon"></i>
                 <span class="filter-card-label" id="filter-card-categories-label">All Categories</span>
-                <i data-lucide="chevron-down"></i>
+                <i data-lucide="chevron-down" class="filter-card-chevron"></i>
             </button>
-            <div class="filter-panel" id="filter-panel-categories" aria-hidden="true"></div>
-            <button class="filter-card" id="filter-card-cities"
+            <div class="filter-panel" id="filter-panel-categories" aria-hidden="true">
+                <section class="categories" id="filter-container"></section>
+            </div>
+            <button class="filter-card" id="filter-card-cities" data-city="All"
                     aria-expanded="false" aria-controls="filter-panel-cities">
                 <span class="filter-card-label" id="filter-card-cities-label">All Cities</span>
-                <i data-lucide="chevron-down"></i>
+                <i data-lucide="chevron-down" class="filter-card-chevron"></i>
             </button>
-            <div class="filter-panel" id="filter-panel-cities" aria-hidden="true"></div>
+            <div class="filter-panel" id="filter-panel-cities" aria-hidden="true">
+                <section class="categories city-filters" id="city-filter-container"></section>
+            </div>
         </section>
 
         <!-- Events Grid -->
