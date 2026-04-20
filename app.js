@@ -177,8 +177,7 @@ function renderEvents() {
     eventsGrid.innerHTML = '';
 
     const isMyEvents     = myEventsBtn.classList.contains('active');
-    const activeCatBtn   = !isMyEvents && document.querySelector('#filter-container .filter-pill.active');
-    const categoryFilter = isMyEvents ? 'MyEvents' : (activeCatBtn ? activeCatBtn.getAttribute('data-category') : 'All');
+    const categoryFilter = isMyEvents ? 'MyEvents' : (filterCardCategories.dataset.category || 'All');
 
     const isAllCities = !activeCity;
 
@@ -343,11 +342,13 @@ function openEventDetail(event) {
 filterContainer.addEventListener('click', (e) => {
     const btn = e.target.closest('.filter-pill');
     if (btn) {
+        const catName = btn.getAttribute('data-category');
         myEventsBtn.classList.remove('active');
         document.querySelectorAll('#filter-container .filter-pill').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
+        filterCardCategories.dataset.category = catName;
         renderEvents();
-        updateCategoryCardVisual(btn.getAttribute('data-category'));
+        updateCategoryCardVisual(catName);
         closeAllFilterPanels();
     }
 });
@@ -357,9 +358,11 @@ myEventsBtn.addEventListener('click', () => {
     myEventsBtn.classList.toggle('active');
     if (!wasActive) {
         document.querySelectorAll('#filter-container .filter-pill').forEach(b => b.classList.remove('active'));
+        filterCardCategories.dataset.category = 'MyEvents';
     } else {
         const allPill = document.querySelector('#filter-container .filter-pill[data-category="All"]');
         if (allPill) allPill.classList.add('active');
+        filterCardCategories.dataset.category = 'All';
     }
     renderEvents();
     updateCategoryCardVisual(myEventsBtn.classList.contains('active') ? 'MyEvents' : 'All');
@@ -370,6 +373,7 @@ cityFilterContainer.addEventListener('click', (e) => {
     if (!btn) return;
     const city = btn.getAttribute('data-city');
     activeCity = (city === 'All' || city === activeCity) ? '' : city;
+    filterCardCities.dataset.city = activeCity || 'All';
     document.querySelectorAll('.city-pill').forEach(b => {
         b.classList.toggle('active', b.getAttribute('data-city') === (activeCity || 'All'));
     });
@@ -443,10 +447,11 @@ function updateCityCardVisual(cityName) {
 }
 
 function updateFilterCardLabels() {
-    const isMyEvents   = myEventsBtn.classList.contains('active');
-    const activeCatBtn = document.querySelector('#filter-container .filter-pill.active');
-    const catName      = isMyEvents ? 'My Events' : (activeCatBtn?.getAttribute('data-category') || 'All');
-    filterCardCatLabel.textContent  = (catName === 'All') ? 'All Categories' : catName;
+    const isMyEvents = myEventsBtn.classList.contains('active');
+    const catName    = isMyEvents ? 'MyEvents' : (filterCardCategories.dataset.category || 'All');
+    filterCardCatLabel.textContent  = (catName === 'All') ? 'All Categories'
+                                    : (catName === 'MyEvents') ? 'My Events'
+                                    : catName;
 
     filterCardCityLabel.textContent = activeCity ? capitalizeWords(activeCity) : 'All Cities';
 }
@@ -689,6 +694,10 @@ async function init() {
             activeCity = nearest.name;
             showGeoBanner(nearest.name);
         }
+    }
+    if (activeCity) {
+        filterCardCities.dataset.city = activeCity;
+        updateCityCardVisual(activeCity);
     }
 
     renderCategoryFilters();
