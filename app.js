@@ -197,6 +197,7 @@ function renderEvents() {
     });
 
     eventCount.innerText = `${filteredEvents.length} Items`;
+    updateFilterCardLabels();
 
     if (filteredEvents.length === 0 && categoryFilter !== 'MyEvents') {
         showEmptyState();
@@ -273,7 +274,6 @@ function renderEvents() {
     }
 
     lucide.createIcons();
-    updateFilterCardLabels();
 }
 
 // --- RSVP (stays localStorage) ---
@@ -387,6 +387,11 @@ cityFilterContainer.addEventListener('click', (e) => {
 
 // --- Filter card panels: exclusive single-panel-open logic ---
 function closeAllFilterPanels() {
+    // Bug 3: blur focus out of any panel before aria-hiding it
+    const focused = document.activeElement;
+    if (filterPanelCategories.contains(focused) || filterPanelCities.contains(focused)) {
+        focused.blur();
+    }
     filterCardCategories.setAttribute('aria-expanded', 'false');
     filterCardCities.setAttribute('aria-expanded', 'false');
     filterPanelCategories.setAttribute('aria-hidden', 'true');
@@ -682,7 +687,13 @@ async function init() {
     citiesData     = citiesResult.data      || [];
     categoriesData = categoriesResult.data  || [];
 
-    // Resolve geo before city pills render so activeCity is set correctly
+    // Explicitly reset card state to "All" before any render or geo override
+    filterCardCategories.dataset.category = 'All';
+    filterCardCities.dataset.city         = 'All';
+    updateCategoryCardVisual('All');
+    updateCityCardVisual('');
+
+    // Resolve geo — may override city card only, never the category card
     const location = await getVisitorLocation();
     if (location?.overrideCity) {
         if (citiesData.some(c => c.name === location.overrideCity)) {
