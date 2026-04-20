@@ -182,14 +182,14 @@ http.createServer((req, res) => {
             send(res, status, 'text/plain', err.code === 'ENOENT' ? 'Not Found' : `Server Error: ${err.code}`);
         } else {
             if (ext === '.html') {
-                // CSP: 'unsafe-eval' needed for Supabase CDN bundle; 'unsafe-inline' tolerates legacy inline style attributes until a cleanup pass.
+                // CSP: 'unsafe-eval' needed for Supabase CDN bundle; esm.sh in connect-src because Supabase fetches its own sub-modules from there at runtime. 'unsafe-inline' tolerates legacy inline style attributes until a cleanup pass.
                 res.setHeader('Content-Security-Policy',
                     "default-src 'self'; " +
                     "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://esm.sh https://unpkg.com; " +
                     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
                     "font-src 'self' https://fonts.gstatic.com; " +
                     "img-src 'self' data: https:; " +
-                    "connect-src 'self' https://ipwho.is https://*.supabase.co wss://*.supabase.co; " +
+                    "connect-src 'self' https://ipwho.is https://*.supabase.co wss://*.supabase.co https://esm.sh https://unpkg.com; " +
                     "frame-ancestors 'none';"
                 );
             }
