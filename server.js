@@ -29,21 +29,22 @@ const MIME_TYPES = {
     '.woff2': 'font/woff2',
     '.map':   'application/json',
     '.txt':   'text/plain',
+    '.xml':   'application/xml',
 };
 
 // ── Allow-lists ───────────────────────────────────────────────────────────────
 
 const ALLOWED_EXTENSIONS = new Set([
     '.html', '.css', '.js', '.png', '.jpg', '.jpeg',
-    '.gif', '.svg', '.ico', '.webp', '.woff', '.woff2', '.map', '.txt',
+    '.gif', '.svg', '.ico', '.webp', '.woff', '.woff2', '.map', '.txt', '.xml',
 ]);
 
 // Files served from the root directory
 const ALLOWED_ROOT_FILES = new Set([
     'index.html', 'admin.html', 'edit-event.html', 'inbox.html', 'login.html',
     'app.js', 'admin.js', 'edit-event.js', 'inbox.js', 'login.js',
-    'db.js', 'geo.js', 'supabase-client.js', 'auth-guard.js', 'public-config.js',
-    'style.css', 'favicon.ico', 'robots.txt',
+    'db.js', 'geo.js', 'supabase-client.js', 'auth-guard.js', 'public-config.js', 'site-config.js',
+    'style.css', 'favicon.ico', 'robots.txt', 'sitemap.xml',
 ]);
 
 // Sub-folders whose contents may be served

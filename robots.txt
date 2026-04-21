@@ -4,4 +4,4 @@ Disallow: /edit-event.html
 Disallow: /inbox.html
 Disallow: /login.html
 
-Sitemap: https://CHANGE-ME-AFTER-DEPLOY.com/sitemap.xml
+Sitemap: https://eventhub.example.com/sitemap.xml
