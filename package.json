@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "build:config": "node scripts/build-config.js",
+    "build:sitemap": "node scripts/generate-sitemap.js",
     "start": "npm run build:config && node server.js",
     "dev": "npm run build:config && node server.js"
   },

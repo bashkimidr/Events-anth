@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <meta name="theme-color" content="#8b5cf6">
+    <link rel="canonical" href="https://eventhub.example.com/event/">
+    <title>Loading event… · EventHub</title>
+    <meta name="description" content="Event details on EventHub — discover music, sports, and events happening near you.">
+    <!-- Open Graph defaults — updated at runtime by event.js -->
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="EventHub">
+    <meta property="og:title" content="Loading event… · EventHub">
+    <meta property="og:description" content="Event details on EventHub — discover music, sports, and events happening near you.">
+    <meta property="og:url" content="https://eventhub.example.com/event/">
+    <meta property="og:image" content="https://eventhub.example.com/social-og-default.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="en_US">
+    <!-- Twitter Card defaults — updated at runtime -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:site" content="@eventhub">
+    <meta name="twitter:title" content="Loading event… · EventHub">
+    <meta name="twitter:description" content="Event details on EventHub — discover music, sports, and events happening near you.">
+    <meta name="twitter:image" content="https://eventhub.example.com/social-og-default.png">
+    <!-- JSON-LD Event schema — filled at runtime -->
+    <script type="application/ld+json" id="event-schema">{}</script>
+    <link rel="stylesheet" href="/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="/site-config.js"></script>
+    <script src="/public-config.js"></script>
+    <style>
+        .event-page-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-color);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .event-page-header a {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .event-page-header a:hover { color: var(--text-color); }
+        .event-page-header a i { width: 16px; height: 16px; }
+
+        #event-main { max-width: 680px; margin: 0 auto; padding: 24px 20px 100px; }
+
+        #event-loading { text-align: center; padding: 80px 0; color: var(--text-muted); font-size: 15px; }
+
+        #event-error { display: none; text-align: center; padding: 80px 20px; }
+        #event-error h2 { font-size: 20px; margin-bottom: 12px; }
+        #event-error p { color: var(--text-muted); margin-bottom: 24px; }
+        #event-error a { color: var(--accent-color); text-decoration: none; font-weight: 500; }
+
+        #event-content { display: none; }
+
+        .event-cover {
+            width: 100%;
+            border-radius: var(--card-radius);
+            overflow: hidden;
+            margin-bottom: 24px;
+            position: relative;
+            background: var(--card-bg);
+        }
+        .event-cover img {
+            width: 100%;
+            max-height: 360px;
+            object-fit: cover;
+            display: block;
+        }
+        .event-cover-placeholder {
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.25;
+        }
+        .event-cover-placeholder i { width: 80px; height: 80px; }
+
+        .event-category-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .event-category-badge i { width: 14px; height: 14px; }
+
+        #event-title {
+            font-size: 28px;
+            font-weight: 700;
+            line-height: 1.25;
+            margin: 0 0 16px;
+            color: var(--text-color);
+        }
+
+        .event-date-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .event-date-row i { width: 16px; height: 16px; flex-shrink: 0; }
+
+        .detail-info-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .event-description {
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--text-color);
+            margin-bottom: 32px;
+        }
+        .event-description p + p { margin-top: 12px; }
+
+        .more-events-section { margin-top: 32px; }
+        .more-events-section h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-color);
+        }
+        .more-events-grid {
+            display: grid;
+            gap: 12px;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        }
+        .more-events-grid a { text-decoration: none; color: inherit; }
+        .more-events-grid .event-card { margin: 0; }
+    </style>
+</head>
+<body data-theme="">
+    <div class="app-container">
+        <header class="event-page-header">
+            <a href="/"><i data-lucide="arrow-left"></i> All events</a>
+            <button id="my-events-btn" class="icon-btn" title="My Events"><i data-lucide="heart"></i></button>
+        </header>
+
+        <main id="event-main">
+            <div id="event-loading">Loading event…</div>
+
+            <div id="event-error">
+                <h2>Event not found</h2>
+                <p>We couldn't find this event. It may have been removed or the link is incorrect.</p>
+                <a href="/">← Back to all events</a>
+            </div>
+
+            <div id="event-content">
+                <div class="event-cover" id="event-cover"></div>
+
+                <div id="event-category-badge" class="event-category-badge"></div>
+
+                <h1 id="event-title"></h1>
+
+                <div class="event-date-row">
+                    <i data-lucide="calendar"></i>
+                    <span id="event-date-time"></span>
+                </div>
+
+                <div class="detail-info-cards">
+                    <div class="info-card">
+                        <span class="info-card-title">Price</span>
+                        <span class="info-card-value" id="event-price">Free</span>
+                    </div>
+                    <div class="info-card">
+                        <span class="info-card-title">People going</span>
+                        <span class="info-card-value" id="event-going-count" style="font-size:16px;font-weight:700;color:var(--text-color);">0</span>
+                    </div>
+                    <div class="info-card">
+                        <span class="info-card-title">Location</span>
+                        <span class="info-card-value" id="event-location"></span>
+                    </div>
+                    <div class="info-card" id="event-going-card" style="cursor:pointer;transition:transform 0.2s;">
+                        <span class="info-card-title">Going?</span>
+                        <span class="info-card-value" id="event-going-icon" style="font-size:24px;filter:grayscale(1);opacity:0.4;transition:all 0.3s ease;line-height:1;">✅</span>
+                    </div>
+                </div>
+
+                <div class="event-description" id="event-description"></div>
+
+                <div class="more-events-section" id="more-events-section" style="display:none;">
+                    <h3 id="more-events-heading">More events in this city</h3>
+                    <div class="more-events-grid" id="more-events-grid"></div>
+                </div>
+            </div>
+        </main>
+
+        <button id="theme-toggle" class="fab-btn fab-secondary" title="Toggle Theme"><i data-lucide="moon"></i></button>
+        <a href="/" class="fab-btn fab-primary" title="Browse all events" style="display:flex;align-items:center;justify-content:center;text-decoration:none;">
+            <i data-lucide="plus-circle"></i>
+        </a>
+    </div>
+
+    <script type="module" src="/event.js"></script>
+</body>
+</html>

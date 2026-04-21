@@ -95,6 +95,33 @@ export async function getCurrentUserWithAdminFlag() {
     return { user, isAdmin: !!(profile?.is_admin) };
 }
 
+// ─── Public: single event by slug ────────────────────────────────────────────
+
+export async function fetchEventBySlug(slug) {
+    const { data, error } = await supabase
+        .from('events')
+        .select('*, cities(name, slug), categories(name, slug, icon_name)')
+        .eq('slug', slug)
+        .eq('status', 'published')
+        .maybeSingle();
+    return { data, error };
+}
+
+export async function fetchPublishedEventsByCity(cityId, excludeId) {
+    const today = new Date().toISOString().split('T')[0];
+    const query = supabase
+        .from('events')
+        .select('*, cities(name, slug), categories(name, slug, icon_name)')
+        .eq('status', 'published')
+        .eq('city_id', cityId)
+        .gte('event_date', today)
+        .order('event_date', { ascending: true })
+        .limit(4);
+    if (excludeId) query.neq('id', excludeId);
+    const { data, error } = await query;
+    return { data: (data || []).filter(e => e.id !== excludeId).slice(0, 3), error };
+}
+
 // ─── Admin: events CRUD ───────────────────────────────────────────────────────
 
 export async function fetchAllEvents() {

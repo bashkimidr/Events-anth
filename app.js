@@ -33,7 +33,6 @@ const adminModal             = document.getElementById('admin-modal');
 const closeAdmin             = document.getElementById('close-admin');
 const saveEvent              = document.getElementById('save-event');
 const eventCategorySelect    = document.getElementById('event-category');
-const eventDetailView        = document.getElementById('event-detail-view');
 const pageHeader             = document.querySelector('.header');
 const eventsMain             = document.querySelector('.events-main');
 const mobileFilters          = document.getElementById('mobile-filters');
@@ -44,7 +43,6 @@ const filterCardCities       = document.getElementById('filter-card-cities');
 const filterCardCatLabel     = document.getElementById('filter-card-categories-label');
 const filterCardCityLabel    = document.getElementById('filter-card-cities-label');
 
-let currentDetailEventId = null;
 
 // --- Normalise Supabase row → internal shape used throughout the UI ---
 function normalizeEvent(e) {
@@ -206,9 +204,6 @@ function renderEvents() {
 
     const renderCard = (event) => {
         const catRes = getCategoryIcon(event.category, event.categoryIcon);
-        const card   = document.createElement('div');
-        card.className = 'event-card';
-        card.setAttribute('data-cat', event.category);
 
         const iconHtml = catRes.isLucide
             ? `<i data-lucide="${catRes.value}"></i>`
@@ -224,6 +219,15 @@ function renderEvents() {
             imageHtml = `<div class="card-image-wrapper placeholder-image" style="display:flex;align-items:center;justify-content:center;opacity:0.3;">${placeholderSvg}</div>`;
         }
 
+        const link = document.createElement('a');
+        link.href  = `/event/${event.slug}`;
+        link.style.textDecoration = 'none';
+        link.style.color          = 'inherit';
+        link.style.display        = 'block';
+
+        const card = document.createElement('div');
+        card.className = 'event-card';
+        card.setAttribute('data-cat', event.category);
         card.innerHTML = `
             <div class="card-category-label">${event.category}</div>
             <div class="card-icon" style="z-index:2;overflow:hidden;display:flex;justify-content:center;align-items:center;">
@@ -238,9 +242,9 @@ function renderEvents() {
                 </div>
             </div>
         `;
-        card.style.cursor = 'pointer';
-        card.addEventListener('click', () => openEventDetail(event));
-        eventsGrid.appendChild(card);
+
+        link.appendChild(card);
+        eventsGrid.appendChild(link);
     };
 
     if (categoryFilter === 'MyEvents') {
@@ -276,67 +280,8 @@ function renderEvents() {
     lucide.createIcons();
 }
 
-// --- RSVP (stays localStorage) ---
-function getRSVPs()         { return JSON.parse(localStorage.getItem('userRSVPs') || '{}'); }
-function updateRSVPs(rsvps) { localStorage.setItem('userRSVPs', JSON.stringify(rsvps)); }
-
-function updateGoingUI(event) {
-    const rsvps   = getRSVPs();
-    const isGoing = !!rsvps[event.id];
-    const totalGoing = (event.baseGoing || 0) + (isGoing ? 1 : 0);
-
-    document.getElementById('detail-going-count').innerText = totalGoing;
-    const icon = document.getElementById('detail-going-icon');
-    icon.style.filter  = isGoing ? 'grayscale(0)' : 'grayscale(1)';
-    icon.style.opacity = isGoing ? '1' : '0.4';
-}
-
-document.getElementById('detail-going-card').addEventListener('click', () => {
-    if (!currentDetailEventId) return;
-    const rsvps = getRSVPs();
-    if (rsvps[currentDetailEventId]) {
-        delete rsvps[currentDetailEventId];
-    } else {
-        rsvps[currentDetailEventId] = true;
-    }
-    updateRSVPs(rsvps);
-    const ev = events.find(e => e.id === currentDetailEventId);
-    if (ev) updateGoingUI(ev);
-    const card = document.getElementById('detail-going-card');
-    card.style.transform = 'scale(0.95)';
-    setTimeout(() => card.style.transform = 'scale(1)', 150);
-});
-
-document.getElementById('back-to-events').addEventListener('click', () => {
-    eventDetailView.style.display = 'none';
-    pageHeader.style.display      = 'flex';
-    mobileFilters.style.display   = '';
-    eventsMain.style.display      = 'block';
-});
-
-function openEventDetail(event) {
-    const detailImage = document.getElementById('detail-image');
-    detailImage.src          = event.image || 'https://images.unsplash.com/photo-1501281668745-f7f5792203b2?auto=format&fit=crop&q=80&w=600';
-    detailImage.style.display = 'block';
-
-    document.getElementById('detail-title').innerText     = event.title;
-    document.getElementById('detail-date-time').innerText = `${formatDate(event.date)} - ${event.time || ''}`;
-    document.getElementById('detail-location').innerText  = (event.location || 'Location TBA') + (event.city ? `, ${capitalizeWords(event.city)}` : '');
-    document.getElementById('detail-price').innerText     = event.price || 'Free';
-
-    document.getElementById('detail-description').innerHTML = event.description
-        ? `<p>${event.description.replace(/\n/g, '<br>')}</p>`
-        : `<p style="font-style:italic;color:var(--text-muted);">No description provided for this event.</p>`;
-
-    currentDetailEventId = event.id;
-    updateGoingUI(event);
-
-    pageHeader.style.display      = 'none';
-    mobileFilters.style.display   = 'none';
-    eventsMain.style.display      = 'none';
-    eventDetailView.style.display     = 'block';
-    window.scrollTo(0, 0);
-}
+// --- RSVP helpers (used by My Events filter) ---
+function getRSVPs() { return JSON.parse(localStorage.getItem('userRSVPs') || '{}'); }
 
 // --- Filter listeners ---
 filterContainer.addEventListener('click', (e) => {
