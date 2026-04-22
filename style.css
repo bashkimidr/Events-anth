@@ -852,6 +852,14 @@ body {
     color: var(--text-muted);
 }
 
+.event-section-divider {
+    border: 0;
+    height: 1px;
+    background: var(--border-color);
+    margin: 40px 0 32px;
+    width: 100%;
+}
+
 /* ── Geo banner ─────────────────────────────────────────────────────────────── */
 #geo-banner {
     display: flex;

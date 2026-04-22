@@ -172,6 +172,7 @@ async function renderMoreEvents(event) {
     if (error || !data || data.length === 0) return;
 
     const section  = document.getElementById('more-events-section');
+    const divider  = document.getElementById('event-section-divider');
     const heading  = document.getElementById('more-events-heading');
     const grid     = document.getElementById('more-events-grid');
     const cityName = capitalizeWords(event.cities?.name || 'this city');
@@ -211,6 +212,7 @@ async function renderMoreEvents(event) {
     });
 
     section.style.display = 'block';
+    if (divider) divider.style.display = 'block';
     lucide.createIcons();
 }
 

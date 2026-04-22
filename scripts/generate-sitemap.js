@@ -1,52 +1,75 @@
-const fs   = require('fs');
+// scripts/generate-sitemap.js
+// Zero-dependency sitemap generator. Requires Node 18+ (for built-in fetch).
+// Run with:
+//   SUPABASE_SERVICE_ROLE_KEY=sb_secret_... node scripts/generate-sitemap.js
+// On Windows CMD:
+//   set SUPABASE_SERVICE_ROLE_KEY=sb_secret_... && node scripts/generate-sitemap.js
+// On Windows PowerShell:
+//   $env:SUPABASE_SERVICE_ROLE_KEY="sb_secret_..."; node scripts/generate-sitemap.js
+
+const fs = require('fs');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '.env') });
 
 async function main() {
-    const { createClient } = await import('@supabase/supabase-js');
-    const url = process.env.SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const url        = process.env.SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!url || !key) {
-        console.error('Need SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in env. Run with:');
-        console.error('  SUPABASE_SERVICE_ROLE_KEY=sb_secret_... node scripts/generate-sitemap.js');
+    if (!url) {
+        console.error('Missing SUPABASE_URL in .env');
+        process.exit(1);
+    }
+    if (!serviceKey) {
+        console.error('Missing SUPABASE_SERVICE_ROLE_KEY.');
+        console.error('Pass it inline — do NOT save it to .env. Example:');
+        console.error('  set SUPABASE_SERVICE_ROLE_KEY=sb_secret_... && node scripts/generate-sitemap.js');
         process.exit(1);
     }
 
-    const supabase = createClient(url, key);
-    const { data: events, error } = await supabase
-        .from('events')
-        .select('slug, updated_at')
-        .eq('status', 'published')
-        .order('updated_at', { ascending: false });
-
-    if (error) {
-        console.error('Supabase error:', error.message);
+    // Fetch published events via PostgREST
+    const eventsEndpoint = `${url}/rest/v1/events?select=slug,updated_at&status=eq.published&order=updated_at.desc`;
+    const resp = await fetch(eventsEndpoint, {
+        headers: {
+            'apikey':        serviceKey,
+            'Authorization': `Bearer ${serviceKey}`,
+        },
+    });
+    if (!resp.ok) {
+        console.error(`Supabase REST call failed: ${resp.status} ${resp.statusText}`);
         process.exit(1);
     }
+    const events = await resp.json();
 
-    const site = 'https://eventhub.example.com'; // TODO: replace at deploy
+    const siteUrl = 'https://eventhub.example.com'; // TODO: replace at deploy
     const urls = [
-        { loc: `${site}/`, changefreq: 'daily', priority: '1.0' },
-        ...(events || []).map(e => ({
-            loc:        `${site}/event/${e.slug}`,
-            lastmod:    e.updated_at,
+        { loc: `${siteUrl}/`, changefreq: 'daily', priority: '1.0' },
+        ...events.map(e => ({
+            loc:        `${siteUrl}/event/${e.slug}`,
+            lastmod:    e.updated_at ? e.updated_at.split('T')[0] : undefined,
             changefreq: 'weekly',
             priority:   '0.8',
         })),
     ];
 
-    const urlXml = urls.map(u =>
-        `  <url>\n    <loc>${u.loc}</loc>\n` +
-        (u.lastmod ? `    <lastmod>${u.lastmod.split('T')[0]}</lastmod>\n` : '') +
-        `    <changefreq>${u.changefreq}</changefreq>\n    <priority>${u.priority}</priority>\n  </url>`
-    ).join('\n');
-
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urlXml}\n</urlset>\n`;
+    const xml =
+        `<?xml version="1.0" encoding="UTF-8"?>\n` +
+        `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+        urls.map(u =>
+            `  <url>\n` +
+            `    <loc>${u.loc}</loc>\n` +
+            (u.lastmod ? `    <lastmod>${u.lastmod}</lastmod>\n` : '') +
+            `    <changefreq>${u.changefreq}</changefreq>\n` +
+            `    <priority>${u.priority}</priority>\n` +
+            `  </url>`
+        ).join('\n') +
+        `\n</urlset>\n`;
 
     const outPath = path.join(__dirname, '..', 'sitemap.xml');
     fs.writeFileSync(outPath, xml);
-    console.log(`Generated sitemap with ${urls.length} URLs → ${outPath}`);
+    console.log(`Generated sitemap with ${urls.length} URLs at ${outPath}`);
 }
 
-main().catch(err => { console.error(err); process.exit(1); });
+main().catch(err => {
+    console.error('Sitemap generation failed:', err.message);
+    process.exit(1);
+});
