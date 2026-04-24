@@ -44,7 +44,8 @@ const ALLOWED_ROOT_FILES = new Set([
     'index.html', 'admin.html', 'edit-event.html', 'inbox.html', 'login.html', 'event.html',
     'app.js', 'admin.js', 'edit-event.js', 'inbox.js', 'login.js', 'event.js',
     'db.js', 'geo.js', 'supabase-client.js', 'auth-guard.js', 'public-config.js', 'site-config.js',
-    'style.css', 'favicon.ico', 'robots.txt', 'sitemap.xml',
+    'style.css', 'legal.css', 'favicon.ico', 'robots.txt', 'sitemap.xml',
+    'privacy.html', 'terms.html', 'cookies.html',
 ]);
 
 // Sub-folders whose contents may be served
@@ -139,6 +140,11 @@ http.createServer((req, res) => {
 
     // Step 5: strip leading slash, default to index.html
     let relative = decoded.replace(/^\/+/, '') || 'index.html';
+
+    // Clean URL rewrites for legal pages
+    if (relative === 'privacy' || relative === 'privacy/')   relative = 'privacy.html';
+    else if (relative === 'terms' || relative === 'terms/')  relative = 'terms.html';
+    else if (relative === 'cookies' || relative === 'cookies/') relative = 'cookies.html';
 
     // SPA rewrite: /event/<slug> → event.html (traversal already blocked above)
     if (/^event\/[a-z0-9][a-z0-9-]*\/?$/i.test(relative)) {

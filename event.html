@@ -6,13 +6,13 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <meta name="theme-color" content="#8b5cf6">
     <link rel="canonical" href="https://eventhub.example.com/event/">
-    <title>Loading event… · EventHub</title>
-    <meta name="description" content="Event details on EventHub — discover music, sports, and events happening near you.">
+    <title>Loading event… · Eventeria</title>
+    <meta name="description" content="Event details on Eventeria — discover music, sports, and events happening near you.">
     <!-- Open Graph defaults — updated at runtime by event.js -->
     <meta property="og:type" content="article">
-    <meta property="og:site_name" content="EventHub">
-    <meta property="og:title" content="Loading event… · EventHub">
-    <meta property="og:description" content="Event details on EventHub — discover music, sports, and events happening near you.">
+    <meta property="og:site_name" content="Eventeria">
+    <meta property="og:title" content="Loading event… · Eventeria">
+    <meta property="og:description" content="Event details on Eventeria — discover music, sports, and events happening near you.">
     <meta property="og:url" content="https://eventhub.example.com/event/">
     <meta property="og:image" content="https://eventhub.example.com/social-og-default.png">
     <meta property="og:image:width" content="1200">
@@ -20,13 +20,14 @@
     <meta property="og:locale" content="en_US">
     <!-- Twitter Card defaults — updated at runtime -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:site" content="@eventhub">
-    <meta name="twitter:title" content="Loading event… · EventHub">
-    <meta name="twitter:description" content="Event details on EventHub — discover music, sports, and events happening near you.">
+    <meta name="twitter:site" content="@eventeria">
+    <meta name="twitter:title" content="Loading event… · Eventeria">
+    <meta name="twitter:description" content="Event details on Eventeria — discover music, sports, and events happening near you.">
     <meta name="twitter:image" content="https://eventhub.example.com/social-og-default.png">
     <!-- JSON-LD Event schema — filled at runtime -->
     <script type="application/ld+json" id="event-schema">{}</script>
     <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/legal.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="/site-config.js"></script>
@@ -198,6 +199,11 @@
                     </div>
                 </div>
 
+                <div class="event-disclaimer">
+                    <i data-lucide="alert-triangle"></i>
+                    <p>Event info may change. Verify directly with the organizer before booking travel or tickets. <strong>Eventeria is not responsible for changes or cancellations.</strong></p>
+                </div>
+
                 <div class="event-description" id="event-description"></div>
 
                 <hr class="event-section-divider" id="event-section-divider" style="display:none;">
@@ -210,9 +216,21 @@
         </main>
 
         <button id="theme-toggle" class="fab-btn fab-secondary" title="Toggle Theme"><i data-lucide="moon"></i></button>
-        <a href="/" class="fab-btn fab-primary" title="Browse all events" style="display:flex;align-items:center;justify-content:center;text-decoration:none;">
+        <a id="admin-add-btn" href="/" class="fab-btn fab-primary" title="Browse all events" style="display:flex;align-items:center;justify-content:center;text-decoration:none;">
             <i data-lucide="plus-circle"></i>
         </a>
+
+        <footer class="site-footer">
+            <div class="footer-links">
+                <a href="/privacy">Privacy Policy</a>
+                <a href="/terms">Terms of Service</a>
+                <a href="/cookies">Cookie Policy</a>
+            </div>
+            <div class="footer-copy">
+                © <span id="footer-year"></span> Eventeria
+            </div>
+        </footer>
+        <script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
     </div>
 
     <script type="module" src="/event.js"></script>

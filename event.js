@@ -35,7 +35,7 @@ function updateSEO(event, slug) {
     const dateStr   = event.event_date ? formatDate(event.event_date) : '';
     const descBase  = event.description ? event.description.slice(0, 80).replace(/\s+\S*$/, '') + '…' : '';
     const metaDesc  = `${event.title} on ${dateStr} at ${event.location}${cityName ? ', ' + cityName : ''}. ${descBase}`.trim();
-    const pageTitle = `${event.title} · ${SITE_CONFIG.name || 'EventHub'}`;
+    const pageTitle = `${event.title} · ${SITE_CONFIG.name || 'Eventeria'}`;
     const canonical = `${SITE_CONFIG.url || ''}/event/${slug}`;
     const ogImage   = event.image_url || (SITE_CONFIG.url + (SITE_CONFIG.defaultOgImage || '/social-og-default.png'));
 
@@ -81,7 +81,7 @@ function updateSEO(event, slug) {
         },
         'organizer': {
             '@type': 'Organization',
-            'name':  SITE_CONFIG.name || 'EventHub',
+            'name':  SITE_CONFIG.name || 'Eventeria',
             'url':   SITE_CONFIG.url  || '',
         },
     };

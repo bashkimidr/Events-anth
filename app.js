@@ -465,10 +465,9 @@ saveEvent.addEventListener('click', async (e) => {
         const price       = document.getElementById('event-price').value.trim();
         const description = document.getElementById('event-description').value.trim();
         const email       = document.getElementById('event-email').value.trim();
-        const phone       = document.getElementById('event-phone').value.trim();
 
-        if (!title || !date || !time || !location || !city || !email || !phone) {
-            alert('Please fill out Title, Email, Phone, City, Date, Time, and Location');
+        if (!title || !date || !time || !location || !city || !email) {
+            alert('Please fill out Title, Email, City, Date, Time, and Location');
             return;
         }
 
@@ -506,7 +505,6 @@ saveEvent.addEventListener('click', async (e) => {
             event_time:      time,
             location, price, image_url,
             submitter_email: email,
-            submitter_phone: phone,
         });
 
         btn.disabled    = false;
@@ -520,7 +518,7 @@ saveEvent.addEventListener('click', async (e) => {
         alert('Thank you! Your event request has been submitted for review.');
         adminModal.classList.remove('active');
 
-        ['event-title','event-email','event-phone','event-date','event-time',
+        ['event-title','event-email','event-date','event-time',
          'event-location','event-price','event-description','event-image-file']
             .forEach(id => { document.getElementById(id).value = ''; });
 
