@@ -46,6 +46,7 @@ const ALLOWED_ROOT_FILES = new Set([
     'db.js', 'geo.js', 'supabase-client.js', 'auth-guard.js', 'public-config.js', 'site-config.js',
     'style.css', 'legal.css', 'favicon.ico', 'robots.txt', 'sitemap.xml',
     'privacy.html', 'terms.html', 'cookies.html',
+    'social-og-default.png',
 ]);
 
 // Sub-folders whose contents may be served
