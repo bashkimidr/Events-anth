@@ -108,6 +108,7 @@
     box-sizing: border-box;
     text-align: center;
     background: var(--bg-color);
+    flex-shrink: 0;
 }
 
 .footer-links {
