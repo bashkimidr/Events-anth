@@ -1,5 +1,6 @@
 import { requireAdmin, attachSignOutButton } from './auth-guard.js';
-import { fetchPendingSubmissions, approveSubmission, rejectSubmission } from './db.js';
+import { fetchPendingSubmissions, approveSubmission } from './db.js';
+import { supabase } from './supabase-client.js';
 
 // ── Auth gate ─────────────────────────────────────────────────────────────────
 const currentUser = await requireAdmin();
@@ -22,6 +23,16 @@ function showToast(text, type = 'success') {
     toastTimer = setTimeout(() => { toast.style.display = 'none'; }, 3500);
 }
 
+// ── Image helpers ─────────────────────────────────────────────────────────────
+async function dataUrlToBlob(dataUrl) {
+    const res = await fetch(dataUrl);
+    return await res.blob();
+}
+
+function slugifyTitle(title) {
+    return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '').slice(0, 40);
+}
+
 // ── Render ────────────────────────────────────────────────────────────────────
 function renderSubmissions(submissions) {
     container.innerHTML = '';
@@ -42,6 +53,12 @@ function renderSubmissions(submissions) {
         const dateLabel = [sub.event_date, sub.event_time].filter(Boolean).join(' · ');
         const locLabel  = [sub.location, sub.city_name].filter(Boolean).join(', ');
 
+        const inlineImageHtml = (sub.pending_image_data && sub.pending_image_data.length > 0)
+            ? `<img src="${sub.pending_image_data}"
+                    style="max-width:100%;max-height:300px;border-radius:8px;
+                           margin:12px 0;object-fit:contain;display:block;">`
+            : '';
+
         card.innerHTML = `
             <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
                 <div style="flex:1;min-width:0;">
@@ -55,7 +72,7 @@ function renderSubmissions(submissions) {
                         ${dateLabel}${locLabel ? ' &bull; ' + locLabel : ''}
                     </p>
                     <p style="margin:0;font-size:13px;">
-                        <strong>Contact:</strong> ${sub.submitter_email || '—'} | ${sub.submitter_phone || '—'}
+                        <strong>Contact:</strong> ${sub.submitter_email || '—'}
                     </p>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
@@ -72,6 +89,8 @@ function renderSubmissions(submissions) {
                 </div>
             </div>
 
+            ${inlineImageHtml}
+
             <button class="details-btn"
                 style="margin-top:10px;background:transparent;color:var(--accent-color);
                        border:1px solid var(--accent-color);padding:4px 12px;border-radius:6px;
@@ -81,11 +100,6 @@ function renderSubmissions(submissions) {
 
             <div class="details-panel" style="display:none;border-top:1px dashed var(--border-color);
                                                padding-top:12px;margin-top:10px;">
-                ${sub.image_url
-                    ? `<img src="${sub.image_url}"
-                            style="max-width:100%;max-height:200px;border-radius:8px;
-                                   margin-bottom:12px;object-fit:cover;">`
-                    : ''}
                 <p style="margin:0 0 6px;font-size:13px;">
                     <strong>Price:</strong> ${sub.price || 'Not specified'}
                 </p>
@@ -104,13 +118,36 @@ function renderSubmissions(submissions) {
             e.currentTarget.textContent = open ? 'View Details' : 'Hide Details';
         });
 
-        // Approve
+        // ── Approve ───────────────────────────────────────────────────────────
         card.querySelector('.approve-btn').addEventListener('click', async (e) => {
+            if (!confirm('Approve and publish this event?')) return;
+
             const btn = e.currentTarget;
             btn.disabled    = true;
             btn.textContent = 'Approving…';
 
-            const { error } = await approveSubmission(sub.id);
+            // 1. Upload image to Storage if pending_image_data exists
+            let imageUrl = null;
+            if (sub.pending_image_data && sub.pending_image_data.length > 0) {
+                try {
+                    const blob     = await dataUrlToBlob(sub.pending_image_data);
+                    const filename = `${Date.now()}_${slugifyTitle(sub.title)}.jpg`;
+                    const { error: uploadErr } = await supabase.storage
+                        .from('event-images')
+                        .upload(filename, blob, { contentType: 'image/jpeg' });
+                    if (uploadErr) throw uploadErr;
+                    const { data: urlData } = supabase.storage.from('event-images').getPublicUrl(filename);
+                    imageUrl = urlData.publicUrl;
+                } catch (err) {
+                    btn.disabled    = false;
+                    btn.textContent = 'Approve';
+                    showToast('Image upload failed: ' + err.message, 'error');
+                    return;
+                }
+            }
+
+            // 2. Create event (resolves city/category, inserts published event)
+            const { data: newEvent, error } = await approveSubmission(sub.id);
             if (error) {
                 btn.disabled    = false;
                 btn.textContent = 'Approve';
@@ -118,21 +155,29 @@ function renderSubmissions(submissions) {
                 return;
             }
 
+            // 3. Patch the newly-created event with the real image_url
+            if (imageUrl && newEvent) {
+                await supabase.from('events').update({ image_url: imageUrl }).eq('id', newEvent.id);
+            }
+
+            // 4. Delete submission row entirely
+            await supabase.from('event_submissions').delete().eq('id', sub.id);
+
             document.getElementById(`sub-card-${sub.id}`)?.remove();
             showToast('Approved and published.', 'success');
             if (!container.children.length) renderSubmissions([]);
         });
 
-        // Reject
+        // ── Reject ────────────────────────────────────────────────────────────
         card.querySelector('.reject-btn').addEventListener('click', async (e) => {
-            const reason = prompt('Reason for rejection (required):')?.trim();
-            if (!reason) return;
+            if (!confirm('Reject and delete this submission?')) return;
 
             const btn = e.currentTarget;
             btn.disabled    = true;
             btn.textContent = 'Rejecting…';
 
-            const { error } = await rejectSubmission(sub.id, reason);
+            // Delete submission row — no Storage ops needed (image never left the DB)
+            const { error } = await supabase.from('event_submissions').delete().eq('id', sub.id);
             if (error) {
                 btn.disabled    = false;
                 btn.textContent = 'Reject';
@@ -141,7 +186,7 @@ function renderSubmissions(submissions) {
             }
 
             document.getElementById(`sub-card-${sub.id}`)?.remove();
-            showToast('Submission rejected.', 'success');
+            showToast('Submission deleted.', 'success');
             if (!container.children.length) renderSubmissions([]);
         });
 

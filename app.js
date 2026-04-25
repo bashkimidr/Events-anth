@@ -1,4 +1,5 @@
-import { fetchPublishedEvents, fetchCities, fetchCategories, submitEventRequest } from './db.js';
+import { fetchPublishedEvents, fetchCities, fetchCategories } from './db.js';
+import { supabase } from './supabase-client.js';
 import { getVisitorLocation, findNearestCity, setUserCityOverride, clearUserCityOverride } from './geo.js';
 
 // State
@@ -42,6 +43,7 @@ const filterCardCategories   = document.getElementById('filter-card-categories')
 const filterCardCities       = document.getElementById('filter-card-cities');
 const filterCardCatLabel     = document.getElementById('filter-card-categories-label');
 const filterCardCityLabel    = document.getElementById('filter-card-cities-label');
+const aboutSection           = document.getElementById('about-section');
 
 
 // --- Normalise Supabase row → internal shape used throughout the UI ---
@@ -170,8 +172,20 @@ function showErrorState(retryFn) {
     document.getElementById('retry-btn')?.addEventListener('click', retryFn);
 }
 
+// --- About section visibility ---
+function updateAboutVisibility() {
+    if (!aboutSection) return;
+    const isMyEvents    = myEventsBtn.classList.contains('active');
+    const catActive     = (filterCardCategories.dataset.category || 'All') !== 'All';
+    const cityActive    = !!activeCity;
+    const searchActive  = searchInput.value.trim().length > 0;
+    const hidden = isMyEvents || catActive || cityActive || searchActive;
+    aboutSection.classList.toggle('hidden', hidden);
+}
+
 // --- Render events grid ---
 function renderEvents() {
+    updateAboutVisibility();
     eventsGrid.innerHTML = '';
 
     const isMyEvents     = myEventsBtn.classList.contains('active');
@@ -448,6 +462,52 @@ savePreferences.addEventListener('click', () => {
     alert('Preferences saved! You will receive notifications for your selected categories.');
 });
 
+// --- Image resize helper (canvas-based, no external libs) ---
+async function resizeImageToBase64(file, maxWidth = 1200, jpegQuality = 0.85, maxBytes = 1024 * 1024) {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/jpg'];
+    if (!allowedTypes.includes(file.type)) {
+        throw new Error('Please upload a JPG, PNG, or WEBP image.');
+    }
+
+    const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Could not read file'));
+        reader.readAsDataURL(file);
+    });
+
+    const img = await new Promise((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = () => reject(new Error('Could not decode image'));
+        i.src = dataUrl;
+    });
+
+    let targetW = img.width;
+    let targetH = img.height;
+    if (targetW > maxWidth) {
+        targetH = Math.round(targetH * (maxWidth / targetW));
+        targetW = maxWidth;
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width  = targetW;
+    canvas.height = targetH;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, targetW, targetH);
+    ctx.drawImage(img, 0, 0, targetW, targetH);
+
+    const resizedDataUrl = canvas.toDataURL('image/jpeg', jpegQuality);
+
+    const sizeBytes = Math.ceil((resizedDataUrl.length - 'data:image/jpeg;base64,'.length) * 3 / 4);
+    if (sizeBytes > maxBytes) {
+        throw new Error('Image is too detailed even after resizing. Try a simpler/smaller image.');
+    }
+
+    return resizedDataUrl;
+}
+
 // --- Request modal → Supabase event_submissions ---
 adminAddBtn.addEventListener('click', () => adminModal.classList.add('active'));
 closeAdmin.addEventListener('click', () => adminModal.classList.remove('active'));
@@ -471,25 +531,14 @@ saveEvent.addEventListener('click', async (e) => {
             return;
         }
 
-        let image_url = '';
-        const imageInput = document.getElementById('event-image-file').files[0];
-        if (imageInput) {
+        let pendingImageData = null;
+        const fileInput = document.getElementById('event-image-file');
+        if (fileInput && fileInput.files && fileInput.files[0]) {
             try {
-                const base64 = await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = ev => resolve(ev.target.result);
-                    reader.onerror = reject;
-                    reader.readAsDataURL(imageInput);
-                });
-                const res  = await fetch('/upload', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image: base64, filename: imageInput.name })
-                });
-                const data = await res.json();
-                if (data.url) image_url = data.url;
+                pendingImageData = await resizeImageToBase64(fileInput.files[0]);
             } catch (err) {
-                console.error('Image upload failed', err);
+                alert(err.message);
+                return;
             }
         }
 
@@ -497,15 +546,19 @@ saveEvent.addEventListener('click', async (e) => {
         btn.disabled    = true;
         btn.textContent = 'Submitting…';
 
-        const { error } = await submitEventRequest({
-            title, description,
-            category_name:   category,
-            city_name:       city,
-            event_date:      date,
-            event_time:      time,
-            location, price, image_url,
-            submitter_email: email,
-        });
+        const { error } = await supabase.from('event_submissions').insert([{
+            title,
+            description,
+            category_name:      category,
+            city_name:          city,
+            event_date:         date,
+            event_time:         time,
+            location,
+            price,
+            submitter_email:    email,
+            pending_image_data: pendingImageData,
+            status:             'pending',
+        }]);
 
         btn.disabled    = false;
         btn.textContent = 'Submit Request';
@@ -533,6 +586,7 @@ const searchInput    = document.getElementById('search-input');
 const searchDropdown = document.getElementById('search-dropdown');
 
 searchInput.addEventListener('input', (e) => {
+    updateAboutVisibility();
     const query = e.target.value.toLowerCase().trim();
     if (!query) { searchDropdown.style.display = 'none'; return; }
 

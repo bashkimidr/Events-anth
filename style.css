@@ -1046,3 +1046,33 @@ body {
     color: #fde68a;
 }
 [data-theme="dark"] .event-disclaimer i { color: #fbbf24; }
+
+/* ── About / intro section ──────────────────────────────────────────────────── */
+.about-eventeria {
+    margin: 24px 0 32px;
+    padding: 0 4px;
+    max-width: 720px;
+}
+.about-heading {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 0 0 12px;
+    color: var(--text-color);
+}
+.about-body {
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--muted-color, #6e6e73);
+    margin: 0 0 12px;
+}
+.about-cta {
+    font-size: 0.95rem;
+    color: var(--muted-color, #6e6e73);
+    margin: 0;
+}
+.about-cta strong {
+    color: var(--text-color);
+}
+.about-eventeria.hidden {
+    display: none;
+}
