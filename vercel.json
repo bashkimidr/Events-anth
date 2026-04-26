@@ -2,7 +2,7 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
-    { "source": "/event/:slug", "destination": "/event.html" },
+    { "source": "/event/(.*)", "destination": "/event.html" },
     { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/terms", "destination": "/terms.html" },
     { "source": "/cookies", "destination": "/cookies.html" },
