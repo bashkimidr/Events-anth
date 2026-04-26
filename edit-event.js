@@ -21,15 +21,20 @@ let citiesData     = [];
 let selectedEvent  = null;
 
 // ── DOM refs ──────────────────────────────────────────────────────────────────
-const editSearchInput    = document.getElementById('edit-search-input');
-const editSearchDropdown = document.getElementById('edit-search-dropdown');
-const editFormWrap       = document.getElementById('edit-form-wrap');
-const editEventCategory  = document.getElementById('edit-event-category');
-const editEventCity      = document.getElementById('edit-event-city');
-const editNewCityGroup   = document.getElementById('edit-new-city-group');
-const editNewCityName    = document.getElementById('edit-new-city-name');
-const formMessage        = document.getElementById('form-message');
-const imagePreview       = document.getElementById('current-image-preview');
+const editSearchInput      = document.getElementById('edit-search-input');
+const editSearchDropdown   = document.getElementById('edit-search-dropdown');
+const editFormWrap         = document.getElementById('edit-form-wrap');
+const editEventCategory    = document.getElementById('edit-event-category');
+const editEventCity        = document.getElementById('edit-event-city');
+const editNewCityGroup     = document.getElementById('edit-new-city-group');
+const editNewCityName      = document.getElementById('edit-new-city-name');
+const formMessage          = document.getElementById('form-message');
+const imagePreview         = document.getElementById('current-image-preview');
+const editRecurringCb      = document.getElementById('edit-recurring-checkbox');
+const editRecurrenceFields = document.getElementById('edit-recurrence-fields');
+const editRecurrenceType   = document.getElementById('edit-recurrence-type');
+const editDayWeeklyWrap    = document.getElementById('edit-recurrence-day-weekly-wrap');
+const editDayMonthlyWrap   = document.getElementById('edit-recurrence-day-monthly-wrap');
 
 // ── Inline feedback ───────────────────────────────────────────────────────────
 function showMessage(text, type = 'success') {
@@ -83,6 +88,21 @@ function rebuildCitySelect(keepValue) {
 }
 
 await loadDropdowns();
+
+// ── Recurrence toggle ─────────────────────────────────────────────────────────
+editRecurringCb.addEventListener('change', () => {
+    editRecurrenceFields.style.display = editRecurringCb.checked ? 'block' : 'none';
+    if (!editRecurringCb.checked) {
+        editRecurrenceType.value      = '';
+        editDayWeeklyWrap.style.display  = 'none';
+        editDayMonthlyWrap.style.display = 'none';
+    }
+});
+
+editRecurrenceType.addEventListener('change', () => {
+    editDayWeeklyWrap.style.display  = editRecurrenceType.value === 'weekly'  ? 'block' : 'none';
+    editDayMonthlyWrap.style.display = editRecurrenceType.value === 'monthly' ? 'block' : 'none';
+});
 
 editEventCity.addEventListener('change', () => {
     const isNew = editEventCity.value === 'NEW';
@@ -168,6 +188,22 @@ function openEditForm(ev) {
     document.getElementById('edit-event-description').value = ev.description  || '';
     document.getElementById('edit-event-image-file').value  = '';
 
+    // Recurrence pre-fill
+    const hasRecurrence = !!ev.recurrence_type || !!ev.recurrence_note;
+    editRecurringCb.checked           = hasRecurrence;
+    editRecurrenceFields.style.display = hasRecurrence ? 'block' : 'none';
+    editRecurrenceType.value           = ev.recurrence_type || '';
+    editDayWeeklyWrap.style.display    = ev.recurrence_type === 'weekly'  ? 'block' : 'none';
+    editDayMonthlyWrap.style.display   = ev.recurrence_type === 'monthly' ? 'block' : 'none';
+    if (ev.recurrence_type === 'weekly' && ev.recurrence_day != null) {
+        document.getElementById('edit-recurrence-day-weekly').value = ev.recurrence_day;
+    }
+    if (ev.recurrence_type === 'monthly' && ev.recurrence_day != null) {
+        document.getElementById('edit-recurrence-day-monthly').value = ev.recurrence_day;
+    }
+    document.getElementById('edit-recurrence-end-date').value = ev.recurrence_end_date || '';
+    document.getElementById('edit-recurrence-note').value     = ev.recurrence_note     || '';
+
     // Image preview
     if (ev.image_url) {
         imagePreview.src          = ev.image_url;
@@ -245,18 +281,34 @@ document.getElementById('edit-save-event').addEventListener('click', async () =>
         image_url = imgData.publicUrl;
     }
 
+    // Recurrence
+    const isRecurring       = editRecurringCb.checked;
+    const recurrenceType    = isRecurring ? (editRecurrenceType.value || null) : null;
+    let   recurrenceDay     = null;
+    if (isRecurring && recurrenceType === 'weekly') {
+        recurrenceDay = parseInt(document.getElementById('edit-recurrence-day-weekly').value, 10);
+    } else if (isRecurring && recurrenceType === 'monthly') {
+        recurrenceDay = parseInt(document.getElementById('edit-recurrence-day-monthly').value, 10);
+    }
+    const recurrenceEndDate = isRecurring ? (document.getElementById('edit-recurrence-end-date').value || null) : null;
+    const recurrenceNote    = isRecurring ? (document.getElementById('edit-recurrence-note').value.trim() || null) : null;
+
     const saveBtn         = document.getElementById('edit-save-event');
     saveBtn.disabled      = true;
     saveBtn.textContent   = 'Saving…';
 
     const { data: updated, error } = await updateEvent(id, {
         title, description,
-        event_date:  date,
-        event_time:  time,
-        location,    price,
+        event_date:          date,
+        event_time:          time,
+        location,            price,
         image_url,
-        category_id: editEventCategory.value,
-        city_id:     cityId,
+        category_id:         editEventCategory.value,
+        city_id:             cityId,
+        recurrence_type:     recurrenceType,
+        recurrence_day:      recurrenceDay,
+        recurrence_end_date: recurrenceEndDate,
+        recurrence_note:     recurrenceNote,
     });
 
     saveBtn.disabled    = false;

@@ -85,6 +85,31 @@ function updateSEO(event, slug) {
             'url':   SITE_CONFIG.url  || '',
         },
     };
+
+    // eventSchedule for structured recurrence types (skip custom note — no clean mapping)
+    if (event.recurrence_type && !event.recurrence_note) {
+        const byDayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        const scheduleFreq = event.recurrence_type === 'daily'   ? 'P1D'
+                           : event.recurrence_type === 'weekly'  ? 'P1W'
+                           : event.recurrence_type === 'monthly' ? 'P1M'
+                           : null;
+        if (scheduleFreq) {
+            const schedule = {
+                '@type':           'Schedule',
+                'repeatFrequency': scheduleFreq,
+                'startDate':       event.event_date,
+            };
+            if (event.recurrence_end_date) schedule.endDate = event.recurrence_end_date;
+            if (event.recurrence_type === 'weekly' && event.recurrence_day != null) {
+                schedule.byDay = [byDayNames[event.recurrence_day]];
+            }
+            if (event.recurrence_type === 'monthly' && event.recurrence_day != null) {
+                schedule.byMonthDay = [event.recurrence_day];
+            }
+            schema.eventSchedule = schedule;
+        }
+    }
+
     const schemaEl = document.getElementById('event-schema');
     if (schemaEl) schemaEl.textContent = JSON.stringify(schema, null, 2);
 }
@@ -124,9 +149,19 @@ function renderEventContent(event, slug) {
     document.getElementById('event-title').textContent = event.title;
 
     // Date + time
-    const dateStr = event.event_date ? formatDate(event.event_date) : 'Date TBA';
-    const timeStr = event.event_time ? ` · ${event.event_time}` : '';
+    const dateStr       = event.event_date ? formatDate(event.event_date) : 'Date TBA';
+    const recurrenceText = window.formatRecurrenceText ? window.formatRecurrenceText(event) : null;
+    const timeStr       = (!recurrenceText && event.event_time) ? ` · ${event.event_time}` : '';
     document.getElementById('event-date-time').textContent = dateStr + timeStr;
+
+    const recurrenceRow = document.getElementById('event-recurrence-row');
+    const recurrenceEl  = document.getElementById('event-recurrence');
+    if (recurrenceText && recurrenceRow && recurrenceEl) {
+        recurrenceEl.textContent    = recurrenceText;
+        recurrenceRow.style.display = 'flex';
+    } else if (recurrenceRow) {
+        recurrenceRow.style.display = 'none';
+    }
 
     // Info cards
     document.getElementById('event-price').textContent    = event.price || 'Free';

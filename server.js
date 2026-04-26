@@ -39,6 +39,7 @@ const ALLOWED_ROOT_FILES = new Set([
     'style.css', 'legal.css', 'favicon.ico', 'robots.txt', 'sitemap.xml',
     'about.html', 'privacy.html', 'terms.html', 'cookies.html',
     'social-og-default.png',
+    'utils-recurrence.js',
 ]);
 
 // Sub-folders whose contents may be served

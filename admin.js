@@ -98,6 +98,21 @@ eventCitySelect.addEventListener('change', () => {
     if (!isNew) newCityName.value = '';
 });
 
+// ── Recurrence toggle ─────────────────────────────────────────────────────────
+document.getElementById('recurring-checkbox').addEventListener('change', (e) => {
+    document.getElementById('recurrence-fields').style.display = e.target.checked ? 'block' : 'none';
+    if (!e.target.checked) {
+        document.getElementById('recurrence-type').value = '';
+        document.getElementById('recurrence-day-weekly-wrap').style.display  = 'none';
+        document.getElementById('recurrence-day-monthly-wrap').style.display = 'none';
+    }
+});
+
+document.getElementById('recurrence-type').addEventListener('change', (e) => {
+    document.getElementById('recurrence-day-weekly-wrap').style.display  = e.target.value === 'weekly'  ? 'block' : 'none';
+    document.getElementById('recurrence-day-monthly-wrap').style.display = e.target.value === 'monthly' ? 'block' : 'none';
+});
+
 // ── Publish handler ───────────────────────────────────────────────────────────
 saveEventBtn.addEventListener('click', async () => {
     clearMessage();
@@ -181,18 +196,38 @@ saveEventBtn.addEventListener('click', async () => {
     saveEventBtn.disabled    = true;
     saveEventBtn.textContent = 'Publishing…';
 
+    // Recurrence
+    const isRecurring    = document.getElementById('recurring-checkbox').checked;
+    const recurrenceType = isRecurring ? (document.getElementById('recurrence-type').value || null) : null;
+    if (isRecurring && !recurrenceType) {
+        showMessage('Please select how this event repeats.', 'error');
+        return;
+    }
+    let recurrenceDay = null;
+    if (isRecurring && recurrenceType === 'weekly') {
+        recurrenceDay = parseInt(document.getElementById('recurrence-day-weekly').value, 10);
+    } else if (isRecurring && recurrenceType === 'monthly') {
+        recurrenceDay = parseInt(document.getElementById('recurrence-day-monthly').value, 10);
+    }
+    const recurrenceEndDate = isRecurring ? (document.getElementById('recurrence-end-date').value || null) : null;
+    const recurrenceNote    = isRecurring ? (document.getElementById('recurrence-note').value.trim() || null) : null;
+
     const { error } = await createEvent({
-        title:       vals['event-title'],
-        description: vals['event-description'],
-        event_date:  vals['event-date'],
-        event_time:  vals['event-time'],
-        location:    vals['event-location'],
-        price:       vals['event-price'],
+        title:               vals['event-title'],
+        description:         vals['event-description'],
+        event_date:          vals['event-date'],
+        event_time:          vals['event-time'],
+        location:            vals['event-location'],
+        price:               vals['event-price'],
         image_url,
-        category_id: categoryId,
-        city_id:     cityId,
-        status:      'published',
-        base_going:  Math.floor(Math.random() * 50) + 1,
+        category_id:         categoryId,
+        city_id:             cityId,
+        status:              'published',
+        base_going:          Math.floor(Math.random() * 50) + 1,
+        recurrence_type:     recurrenceType,
+        recurrence_day:      recurrenceDay,
+        recurrence_end_date: recurrenceEndDate,
+        recurrence_note:     recurrenceNote,
     });
 
     saveEventBtn.disabled    = false;
@@ -208,10 +243,15 @@ saveEventBtn.addEventListener('click', async () => {
     // Reset form
     ['event-title', 'event-date', 'event-time', 'event-location',
      'event-price', 'event-description', 'event-image-file',
-     'new-category-name', 'new-city-name'].forEach(id => {
+     'new-category-name', 'new-city-name',
+     'recurrence-type', 'recurrence-end-date', 'recurrence-note'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
+    document.getElementById('recurring-checkbox').checked            = false;
+    document.getElementById('recurrence-fields').style.display       = 'none';
+    document.getElementById('recurrence-day-weekly-wrap').style.display  = 'none';
+    document.getElementById('recurrence-day-monthly-wrap').style.display = 'none';
     newCategoryGroup.style.display = 'none';
     newCityGroup.style.display     = 'none';
     await loadDropdowns();

@@ -31,6 +31,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="/site-config.js"></script>
     <script src="/public-config.js"></script>
+    <script src="/utils-recurrence.js"></script>
     <style>
         .event-page-header {
             display: flex;
@@ -177,6 +178,11 @@
                 <div class="event-date-row">
                     <i data-lucide="calendar"></i>
                     <span id="event-date-time"></span>
+                </div>
+
+                <div class="event-date-row" id="event-recurrence-row" style="display:none;">
+                    <i data-lucide="repeat"></i>
+                    <span id="event-recurrence"></span>
                 </div>
 
                 <div class="detail-info-cards">

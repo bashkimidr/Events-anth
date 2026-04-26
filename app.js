@@ -49,21 +49,26 @@ const aboutSection           = document.getElementById('about-section');
 // --- Normalise Supabase row → internal shape used throughout the UI ---
 function normalizeEvent(e) {
     return {
-        id:           e.id,
-        title:        e.title,
-        category:     e.categories?.name     || '',
-        categorySlug: e.categories?.slug     || '',
-        categoryIcon: e.categories?.icon_name || null,
-        date:         e.event_date,
-        time:         e.event_time            || '',
-        location:     e.location              || '',
-        city:         e.cities?.name          || '',
-        citySlug:     e.cities?.slug          || '',
-        baseGoing:    e.base_going            || 0,
-        image:        e.image_url             || '',
-        price:        e.price                 || '',
-        description:  e.description           || '',
-        slug:         e.slug                  || '',
+        id:                  e.id,
+        title:               e.title,
+        category:            e.categories?.name     || '',
+        categorySlug:        e.categories?.slug     || '',
+        categoryIcon:        e.categories?.icon_name || null,
+        date:                e.event_date,
+        time:                e.event_time            || '',
+        event_time:          e.event_time            || '',
+        location:            e.location              || '',
+        city:                e.cities?.name          || '',
+        citySlug:            e.cities?.slug          || '',
+        baseGoing:           e.base_going            || 0,
+        image:               e.image_url             || '',
+        price:               e.price                 || '',
+        description:         e.description           || '',
+        slug:                e.slug                  || '',
+        recurrence_type:     e.recurrence_type       || null,
+        recurrence_day:      e.recurrence_day        != null ? e.recurrence_day : null,
+        recurrence_end_date: e.recurrence_end_date   || null,
+        recurrence_note:     e.recurrence_note       || null,
     };
 }
 
@@ -242,6 +247,8 @@ function renderEvents() {
         const card = document.createElement('div');
         card.className = 'event-card';
         card.setAttribute('data-cat', event.category);
+        const recurrenceText = window.formatRecurrenceText ? window.formatRecurrenceText(event) : null;
+
         card.innerHTML = `
             <div class="card-category-label">${event.category}</div>
             <div class="card-icon" style="z-index:2;overflow:hidden;display:flex;justify-content:center;align-items:center;">
@@ -251,7 +258,8 @@ function renderEvents() {
             <div class="card-content-wrapper">
                 <h3 class="card-title">${event.title}</h3>
                 <div class="card-meta">
-                    <p class="card-date"><i data-lucide="calendar" class="meta-icon"></i>${formatDate(event.date)}${event.time ? ' <i data-lucide="clock" class="meta-icon" style="margin-left:6px;"></i> ' + event.time : ''}</p>
+                    <p class="card-date"><i data-lucide="calendar" class="meta-icon"></i>${formatDate(event.date)}${!recurrenceText && event.time ? ' <i data-lucide="clock" class="meta-icon" style="margin-left:6px;"></i> ' + event.time : ''}</p>
+                    ${recurrenceText ? '<p class="card-date"><i data-lucide="repeat" class="meta-icon"></i> ' + recurrenceText + '</p>' : ''}
                     ${event.location ? '<p class="card-location"><i data-lucide="map-pin" class="meta-icon"></i>' + event.location + (event.city ? ', ' + capitalizeWords(event.city) : '') + '</p>' : ''}
                 </div>
             </div>
@@ -512,6 +520,20 @@ async function resizeImageToBase64(file, maxWidth = 1200, jpegQuality = 0.85, ma
 adminAddBtn.addEventListener('click', () => adminModal.classList.add('active'));
 closeAdmin.addEventListener('click', () => adminModal.classList.remove('active'));
 
+document.getElementById('recurring-checkbox').addEventListener('change', (e) => {
+    document.getElementById('recurrence-fields').style.display = e.target.checked ? 'block' : 'none';
+    if (!e.target.checked) {
+        document.getElementById('recurrence-type').value = '';
+        document.getElementById('recurrence-day-weekly-wrap').style.display  = 'none';
+        document.getElementById('recurrence-day-monthly-wrap').style.display = 'none';
+    }
+});
+
+document.getElementById('recurrence-type').addEventListener('change', (e) => {
+    document.getElementById('recurrence-day-weekly-wrap').style.display  = e.target.value === 'weekly'  ? 'block' : 'none';
+    document.getElementById('recurrence-day-monthly-wrap').style.display = e.target.value === 'monthly' ? 'block' : 'none';
+});
+
 saveEvent.addEventListener('click', async (e) => {
     try {
         if (e) e.preventDefault();
@@ -528,6 +550,21 @@ saveEvent.addEventListener('click', async (e) => {
 
         if (!title || !date || !time || !location || !city || !email) {
             alert('Please fill out Title, Email, City, Date, Time, and Location');
+            return;
+        }
+
+        // Recurrence
+        const isRecurring       = document.getElementById('recurring-checkbox').checked;
+        const recurrenceType    = isRecurring ? (document.getElementById('recurrence-type').value || null) : null;
+        const recurrenceEndDate = isRecurring ? (document.getElementById('recurrence-end-date').value || null) : null;
+        let   recurrenceDay     = null;
+        if (isRecurring && recurrenceType === 'weekly') {
+            recurrenceDay = parseInt(document.getElementById('recurrence-day-weekly').value, 10);
+        } else if (isRecurring && recurrenceType === 'monthly') {
+            recurrenceDay = parseInt(document.getElementById('recurrence-day-monthly').value, 10);
+        }
+        if (isRecurring && !recurrenceType) {
+            alert('Please select how this event repeats.');
             return;
         }
 
@@ -549,15 +586,19 @@ saveEvent.addEventListener('click', async (e) => {
         const { error } = await supabase.from('event_submissions').insert([{
             title,
             description,
-            category_name:      category,
-            city_name:          city,
-            event_date:         date,
-            event_time:         time,
+            category_name:        category,
+            city_name:            city,
+            event_date:           date,
+            event_time:           time,
             location,
             price,
-            submitter_email:    email,
-            pending_image_data: pendingImageData,
-            status:             'pending',
+            submitter_email:      email,
+            pending_image_data:   pendingImageData,
+            status:               'pending',
+            recurrence_type:      recurrenceType,
+            recurrence_day:       recurrenceDay,
+            recurrence_end_date:  recurrenceEndDate,
+            recurrence_note:      null,
         }]);
 
         btn.disabled    = false;
@@ -572,8 +613,13 @@ saveEvent.addEventListener('click', async (e) => {
         adminModal.classList.remove('active');
 
         ['event-title','event-email','event-date','event-time',
-         'event-location','event-price','event-description','event-image-file']
+         'event-location','event-price','event-description','event-image-file',
+         'recurrence-type','recurrence-end-date']
             .forEach(id => { document.getElementById(id).value = ''; });
+        document.getElementById('recurring-checkbox').checked            = false;
+        document.getElementById('recurrence-fields').style.display       = 'none';
+        document.getElementById('recurrence-day-weekly-wrap').style.display  = 'none';
+        document.getElementById('recurrence-day-monthly-wrap').style.display = 'none';
 
     } catch (err) {
         alert('Error during submission: ' + err.message);

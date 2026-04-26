@@ -195,6 +195,45 @@
                     <label for="event-description">Description</label>
                     <textarea id="event-description" placeholder="A detailed description of the event..." style="width: 100%; min-height: 80px; padding: 12px; border: 1px solid var(--border-color); border-radius: var(--card-radius); background: var(--bg-color); color: var(--text-color); font-family: inherit; font-size: 14px; resize: vertical;" required></textarea>
                 </div>
+                <!-- Recurrence -->
+                <div class="form-group">
+                    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:normal;">
+                        <input type="checkbox" id="recurring-checkbox" style="width:16px;height:16px;cursor:pointer;">
+                        <span>This is a recurring event</span>
+                    </label>
+                </div>
+                <div id="recurrence-fields" style="display:none;">
+                    <div class="form-group">
+                        <label for="recurrence-type">Repeats</label>
+                        <select id="recurrence-type">
+                            <option value="">— select —</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="recurrence-day-weekly-wrap" style="display:none;">
+                        <label for="recurrence-day-weekly">On day</label>
+                        <select id="recurrence-day-weekly">
+                            <option value="0">Sunday</option>
+                            <option value="1">Monday</option>
+                            <option value="2">Tuesday</option>
+                            <option value="3">Wednesday</option>
+                            <option value="4">Thursday</option>
+                            <option value="5">Friday</option>
+                            <option value="6">Saturday</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="recurrence-day-monthly-wrap" style="display:none;">
+                        <label for="recurrence-day-monthly">Day of month</label>
+                        <input type="number" id="recurrence-day-monthly" min="1" max="31" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="recurrence-end-date">Recurs until (optional)</label>
+                        <input type="date" id="recurrence-end-date">
+                    </div>
+                </div>
+
                 <div class="form-group">
                     <label for="event-image-file">Event Image (Local Upload)</label>
                     <input type="file" id="event-image-file" accept="image/*">
@@ -209,6 +248,7 @@
 
     <script src="/site-config.js"></script>
     <script src="public-config.js"></script>
+    <script src="/utils-recurrence.js"></script>
     <script type="module" src="app.js"></script>
 
     <footer class="site-footer">

@@ -55,8 +55,9 @@ function renderSubmissions(submissions) {
             'background:var(--bg-color);padding:16px;border-radius:var(--card-radius);' +
             'border:1px solid var(--border-color);';
 
-        const dateLabel = [sub.event_date, sub.event_time].filter(Boolean).join(' · ');
-        const locLabel  = [sub.location, sub.city_name].filter(Boolean).join(', ');
+        const dateLabel      = [sub.event_date, sub.event_time].filter(Boolean).join(' · ');
+        const locLabel       = [sub.location, sub.city_name].filter(Boolean).join(', ');
+        const recurrenceText = window.formatRecurrenceText ? window.formatRecurrenceText(sub) : null;
 
         const inlineImageHtml = (sub.pending_image_data && sub.pending_image_data.length > 0)
             ? `<img src="${sub.pending_image_data}"
@@ -79,6 +80,7 @@ function renderSubmissions(submissions) {
                     <p style="margin:0;font-size:13px;">
                         <strong>Contact:</strong> ${sub.submitter_email || '—'}
                     </p>
+                    ${recurrenceText ? `<p style="margin:4px 0 0;font-size:13px;"><strong>Recurs:</strong> ${recurrenceText}</p>` : ''}
                 </div>
                 <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
                     <button class="approve-btn"
@@ -149,11 +151,19 @@ function renderSubmissions(submissions) {
                 const { data: newEvent, error: approveErr } = await approveSubmission(sub.id);
                 if (approveErr) throw new Error('Approval failed: ' + approveErr.message);
 
-                // 3. Patch the newly-created event with the real image_url
-                if (imageUrl && newEvent) {
+                // 3. Patch image_url and recurrence fields onto the newly-created event
+                const patch = {};
+                if (imageUrl) patch.image_url = imageUrl;
+                if (sub.recurrence_type) {
+                    patch.recurrence_type     = sub.recurrence_type;
+                    patch.recurrence_day      = sub.recurrence_day      ?? null;
+                    patch.recurrence_end_date = sub.recurrence_end_date ?? null;
+                    patch.recurrence_note     = sub.recurrence_note     ?? null;
+                }
+                if (Object.keys(patch).length > 0 && newEvent) {
                     const { error: patchErr } = await supabase
-                        .from('events').update({ image_url: imageUrl }).eq('id', newEvent.id);
-                    if (patchErr) throw new Error('Image patch failed: ' + patchErr.message);
+                        .from('events').update(patch).eq('id', newEvent.id);
+                    if (patchErr) throw new Error('Event patch failed: ' + patchErr.message);
                 }
 
                 // 4. Delete submission row — only after all DB steps confirmed
