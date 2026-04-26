@@ -5,7 +5,11 @@
     { "source": "/event/:slug", "destination": "/event.html" },
     { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/terms", "destination": "/terms.html" },
-    { "source": "/cookies", "destination": "/cookies.html" }
+    { "source": "/cookies", "destination": "/cookies.html" },
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/admin", "destination": "/admin.html" },
+    { "source": "/edit-event", "destination": "/edit-event.html" },
+    { "source": "/inbox", "destination": "/inbox.html" }
   ],
   "headers": [
     {
