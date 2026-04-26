@@ -24,9 +24,14 @@ function showToast(text, type = 'success') {
 }
 
 // ── Image helpers ─────────────────────────────────────────────────────────────
-async function dataUrlToBlob(dataUrl) {
-    const res = await fetch(dataUrl);
-    return await res.blob();
+function dataUrlToBlob(dataUrl) {
+    const arr       = dataUrl.split(',');
+    const mimeMatch = arr[0].match(/:(.*?);/);
+    const mime      = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+    const bstr      = atob(arr[1]);
+    const u8        = new Uint8Array(bstr.length);
+    for (let i = 0; i < bstr.length; i++) u8[i] = bstr.charCodeAt(i);
+    return new Blob([u8], { type: mime });
 }
 
 function slugifyTitle(title) {
@@ -126,46 +131,46 @@ function renderSubmissions(submissions) {
             btn.disabled    = true;
             btn.textContent = 'Approving…';
 
-            // 1. Upload image to Storage if pending_image_data exists
-            let imageUrl = null;
-            if (sub.pending_image_data && sub.pending_image_data.length > 0) {
-                try {
-                    const blob     = await dataUrlToBlob(sub.pending_image_data);
+            try {
+                // 1. Upload image to Storage if pending_image_data exists
+                let imageUrl = null;
+                if (sub.pending_image_data && sub.pending_image_data.length > 0) {
+                    const blob     = dataUrlToBlob(sub.pending_image_data);
                     const filename = `${Date.now()}_${slugifyTitle(sub.title)}.jpg`;
                     const { error: uploadErr } = await supabase.storage
                         .from('event-images')
                         .upload(filename, blob, { contentType: 'image/jpeg' });
-                    if (uploadErr) throw uploadErr;
+                    if (uploadErr) throw new Error('Image upload failed: ' + uploadErr.message);
                     const { data: urlData } = supabase.storage.from('event-images').getPublicUrl(filename);
                     imageUrl = urlData.publicUrl;
-                } catch (err) {
-                    btn.disabled    = false;
-                    btn.textContent = 'Approve';
-                    showToast('Image upload failed: ' + err.message, 'error');
-                    return;
                 }
-            }
 
-            // 2. Create event (resolves city/category, inserts published event)
-            const { data: newEvent, error } = await approveSubmission(sub.id);
-            if (error) {
+                // 2. Create event (resolves city/category, inserts published event)
+                const { data: newEvent, error: approveErr } = await approveSubmission(sub.id);
+                if (approveErr) throw new Error('Approval failed: ' + approveErr.message);
+
+                // 3. Patch the newly-created event with the real image_url
+                if (imageUrl && newEvent) {
+                    const { error: patchErr } = await supabase
+                        .from('events').update({ image_url: imageUrl }).eq('id', newEvent.id);
+                    if (patchErr) throw new Error('Image patch failed: ' + patchErr.message);
+                }
+
+                // 4. Delete submission row — only after all DB steps confirmed
+                const { error: deleteErr } = await supabase
+                    .from('event_submissions').delete().eq('id', sub.id);
+                if (deleteErr) throw new Error('Submission delete failed: ' + deleteErr.message);
+
+                document.getElementById(`sub-card-${sub.id}`)?.remove();
+                showToast('Approved and published.', 'success');
+                if (!container.children.length) renderSubmissions([]);
+
+            } catch (err) {
+                console.error('[inbox] approve error:', err);
                 btn.disabled    = false;
                 btn.textContent = 'Approve';
-                showToast('Approval failed: ' + error.message, 'error');
-                return;
+                showToast(err.message, 'error');
             }
-
-            // 3. Patch the newly-created event with the real image_url
-            if (imageUrl && newEvent) {
-                await supabase.from('events').update({ image_url: imageUrl }).eq('id', newEvent.id);
-            }
-
-            // 4. Delete submission row entirely
-            await supabase.from('event_submissions').delete().eq('id', sub.id);
-
-            document.getElementById(`sub-card-${sub.id}`)?.remove();
-            showToast('Approved and published.', 'success');
-            if (!container.children.length) renderSubmissions([]);
         });
 
         // ── Reject ────────────────────────────────────────────────────────────
