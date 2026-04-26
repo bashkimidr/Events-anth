@@ -6,20 +6,58 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://eventeria.app/event/crypto-presentataion-09zdj</loc>
-    <lastmod>2026-04-22</lastmod>
+    <loc>https://eventeria.app/about</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://eventeria.app/privacy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://eventeria.app/terms</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://eventeria.app/cookies</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
+    <loc>https://eventeria.app/event/new-event-incognitp-yfse2</loc>
+    <lastmod>2026-04-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://eventeria.app/event/dj-sample-nashwill-sjutb</loc>
-    <lastmod>2026-04-22</lastmod>
+    <loc>https://eventeria.app/event/new-event-from-admin-page-pvt9z</loc>
+    <lastmod>2026-04-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://eventeria.app/event/austin-music-festival-2026-t1b9d</loc>
-    <lastmod>2026-04-22</lastmod>
+    <loc>https://eventeria.app/event/new-event-test-qypva</loc>
+    <lastmod>2026-04-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://eventeria.app/event/event-request-test-1c7kc</loc>
+    <lastmod>2026-04-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://eventeria.app/event/new-test-event-on-live-vercel-admin-8qcr5</loc>
+    <lastmod>2026-04-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://eventeria.app/event/test-event-ezrl4</loc>
+    <lastmod>2026-04-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
