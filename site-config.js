@@ -4,7 +4,7 @@ window.SITE_CONFIG = {
     name:             "Eventeria",
     tagline:          "Events happening near you — find something to do today, this weekend, or next month.",
     shortDescription: "Find local events, concerts, workshops, and things to do near you.",
-    url:              "https://eventhub.example.com",  // TODO: replace at deploy
+    url:              "https://eventeria.app",  // TODO: replace at deploy
     locale:           "en_US",
     locale_hreflang:  "en",
     defaultOgImage:   "/social-og-default.png",

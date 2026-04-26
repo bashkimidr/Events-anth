@@ -40,7 +40,7 @@ async function main() {
     }
     const events = await resp.json();
 
-    const siteUrl = 'https://eventhub.example.com'; // TODO: replace at deploy
+    const siteUrl = 'https://eventeria.app'; // TODO: replace at deploy
     const urls = [
         { loc: `${siteUrl}/`, changefreq: 'daily', priority: '1.0' },
         { loc: `${siteUrl}/about`,   changefreq: 'yearly', priority: '0.3' },

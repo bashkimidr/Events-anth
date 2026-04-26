@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://eventhub.example.com/</loc>
+    <loc>https://eventeria.app/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://eventhub.example.com/event/crypto-presentataion-09zdj</loc>
+    <loc>https://eventeria.app/event/crypto-presentataion-09zdj</loc>
     <lastmod>2026-04-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://eventhub.example.com/event/dj-sample-nashwill-sjutb</loc>
+    <loc>https://eventeria.app/event/dj-sample-nashwill-sjutb</loc>
     <lastmod>2026-04-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://eventhub.example.com/event/austin-music-festival-2026-t1b9d</loc>
+    <loc>https://eventeria.app/event/austin-music-festival-2026-t1b9d</loc>
     <lastmod>2026-04-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
