@@ -43,6 +43,7 @@ async function main() {
     const siteUrl = 'https://eventhub.example.com'; // TODO: replace at deploy
     const urls = [
         { loc: `${siteUrl}/`, changefreq: 'daily', priority: '1.0' },
+        { loc: `${siteUrl}/about`,   changefreq: 'yearly', priority: '0.3' },
         { loc: `${siteUrl}/privacy`, changefreq: 'yearly', priority: '0.3' },
         { loc: `${siteUrl}/terms`,   changefreq: 'yearly', priority: '0.3' },
         { loc: `${siteUrl}/cookies`, changefreq: 'yearly', priority: '0.3' },

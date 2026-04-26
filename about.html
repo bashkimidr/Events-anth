@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <meta name="theme-color" content="#8b5cf6">
+    <link rel="canonical" href="https://eventhub.example.com/about">
+    <title>About · Eventeria</title>
+    <meta name="description" content="Learn about Eventeria — local event discovery for cities across the United States.">
+    <meta name="robots" content="index, follow">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Eventeria">
+    <meta property="og:title" content="About · Eventeria">
+    <meta property="og:description" content="Learn about Eventeria — local event discovery for cities across the United States.">
+    <meta property="og:url" content="https://eventhub.example.com/about">
+    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="/legal.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body data-theme="">
+    <div class="legal-page">
+        <header class="legal-header">
+            <a href="/" class="legal-back">← Back to Eventeria</a>
+        </header>
+
+        <main class="legal-main">
+            <h1>About Eventeria</h1>
+            <p>Eventeria curates local events in cities across the United States — concerts, sports games, festivals, lectures, workshops, and more. Currently featuring events in Austin, Nashville, and Denver.</p>
+            <p>Find something to do today, this weekend, or next month, all from one place.</p>
+        </main>
+
+        <footer class="site-footer">
+            <div class="footer-links">
+                <a href="/about">About</a>
+                <a href="/privacy">Privacy Policy</a>
+                <a href="/terms">Terms of Service</a>
+                <a href="/cookies">Cookie Policy</a>
+            </div>
+            <div class="footer-copy">
+                © <span id="footer-year"></span> Eventeria
+            </div>
+        </footer>
+        <script>document.getElementById('footer-year').textContent = new Date().getFullYear();</script>
+    </div>
+</body>
+</html>

@@ -37,7 +37,7 @@ const ALLOWED_ROOT_FILES = new Set([
     'app.js', 'admin.js', 'edit-event.js', 'inbox.js', 'login.js', 'event.js',
     'db.js', 'geo.js', 'supabase-client.js', 'auth-guard.js', 'public-config.js', 'site-config.js',
     'style.css', 'legal.css', 'favicon.ico', 'robots.txt', 'sitemap.xml',
-    'privacy.html', 'terms.html', 'cookies.html',
+    'about.html', 'privacy.html', 'terms.html', 'cookies.html',
     'social-og-default.png',
 ]);
 
@@ -94,8 +94,9 @@ http.createServer((req, res) => {
     // Step 5: strip leading slash, default to index.html
     let relative = decoded.replace(/^\/+/, '') || 'index.html';
 
-    // Clean URL rewrites for legal pages
-    if (relative === 'privacy' || relative === 'privacy/')   relative = 'privacy.html';
+    // Clean URL rewrites for about + legal pages
+    if (relative === 'about' || relative === 'about/')       relative = 'about.html';
+    else if (relative === 'privacy' || relative === 'privacy/')   relative = 'privacy.html';
     else if (relative === 'terms' || relative === 'terms/')  relative = 'terms.html';
     else if (relative === 'cookies' || relative === 'cookies/') relative = 'cookies.html';
 
