@@ -1,4 +1,5 @@
 import { fetchEventBySlug, fetchPublishedEventsByCity } from './db.js';
+import { supabase } from './supabase-client.js';
 
 const SITE_CONFIG = window.SITE_CONFIG || {};
 
@@ -114,10 +115,9 @@ function updateSEO(event, slug) {
     if (schemaEl) schemaEl.textContent = JSON.stringify(schema, null, 2);
 }
 
-function updateGoingUI(eventId, baseGoing) {
-    const isGoing    = !!getRSVPs()[eventId];
-    const totalGoing = (baseGoing || 0) + (isGoing ? 1 : 0);
-    document.getElementById('event-going-count').innerText = totalGoing;
+function updateGoingUI(eventId, goingCount) {
+    const isGoing = !!getRSVPs()[eventId];
+    document.getElementById('event-going-count').innerText = Math.max(0, goingCount);
     const icon = document.getElementById('event-going-icon');
     icon.style.filter  = isGoing ? 'grayscale(0)' : 'grayscale(1)';
     icon.style.opacity = isGoing ? '1'             : '0.4';
@@ -187,17 +187,43 @@ function renderEventContent(event, slug) {
         mapSection.style.display = 'block';
     }
 
-    // RSVP
-    updateGoingUI(event.id, event.base_going);
-    document.getElementById('event-going-card').addEventListener('click', () => {
-        const rsvps = getRSVPs();
-        if (rsvps[event.id]) delete rsvps[event.id];
-        else rsvps[event.id] = true;
+    // RSVP — DB is source of truth for count; localStorage gates per-device toggle
+    let currentCount = event.going_count ?? 0;
+    updateGoingUI(event.id, currentCount);
+
+    document.getElementById('event-going-card').addEventListener('click', async () => {
+        const rsvps   = getRSVPs();
+        const isGoing = !!rsvps[event.id];
+
+        // Optimistic update
+        if (isGoing) {
+            delete rsvps[event.id];
+            currentCount = Math.max(0, currentCount - 1);
+        } else {
+            rsvps[event.id] = true;
+            currentCount += 1;
+        }
         updateRSVPs(rsvps);
-        updateGoingUI(event.id, event.base_going);
+        updateGoingUI(event.id, currentCount);
+
         const card = document.getElementById('event-going-card');
         card.style.transform = 'scale(0.95)';
         setTimeout(() => card.style.transform = 'scale(1)', 150);
+
+        // Persist to DB; revert on error
+        const { error } = await supabase
+            .from('events')
+            .update({ going_count: currentCount })
+            .eq('id', event.id);
+
+        if (error) {
+            // Revert optimistic update
+            currentCount = isGoing ? currentCount + 1 : Math.max(0, currentCount - 1);
+            if (isGoing) rsvps[event.id] = true; else delete rsvps[event.id];
+            updateRSVPs(rsvps);
+            updateGoingUI(event.id, currentCount);
+            console.error('[RSVP] update failed:', error.message);
+        }
     });
 
     // Show content
