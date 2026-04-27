@@ -245,8 +245,8 @@ document.getElementById('edit-save-event').addEventListener('click', async () =>
     const price       = document.getElementById('edit-event-price').value.trim();
     const description = document.getElementById('edit-event-description').value.trim();
 
-    if (!title || !date || !time || !location) {
-        showMessage('Title, date, time and location are required.', 'error');
+    if (!title || !date || !location) {
+        showMessage('Title, date and location are required.', 'error');
         return;
     }
 
@@ -301,7 +301,7 @@ document.getElementById('edit-save-event').addEventListener('click', async () =>
     const { data: updated, error } = await updateEvent(id, {
         title, description,
         event_date:          date,
-        event_time:          time,
+        event_time:          time || null,
         location,
         address:             document.getElementById('edit-event-address').value.trim() || null,
         price,

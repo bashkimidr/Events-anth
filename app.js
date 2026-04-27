@@ -258,7 +258,7 @@ function renderEvents() {
             <div class="card-content-wrapper">
                 <h3 class="card-title">${event.title}</h3>
                 <div class="card-meta">
-                    <p class="card-date"><i data-lucide="calendar" class="meta-icon"></i>${formatDate(event.date)}${event.time ? (recurrenceText ? ' <i data-lucide="repeat" class="meta-icon" style="margin-left:6px;"></i>' : '') + ' <i data-lucide="clock" class="meta-icon" style="margin-left:6px;"></i> ' + (window.formatTimeShort ? window.formatTimeShort(event.time) : event.time) : ''}</p>
+                    <p class="card-date"><i data-lucide="calendar" class="meta-icon"></i>${formatDate(event.date)}${recurrenceText ? ' <i data-lucide="repeat" class="meta-icon" style="margin-left:6px;"></i>' : ''} <i data-lucide="clock" class="meta-icon" style="margin-left:6px;"></i> ${event.time ? (window.formatTimeShort ? window.formatTimeShort(event.time) : event.time) : 'All day'}</p>
                     ${event.location ? '<p class="card-location"><i data-lucide="map-pin" class="meta-icon"></i>' + event.location + (event.city ? ', ' + capitalizeWords(event.city) : '') + '</p>' : ''}
                 </div>
             </div>
@@ -555,8 +555,8 @@ saveEvent.addEventListener('click', async (e) => {
         const description = document.getElementById('event-description').value.trim();
         const email       = document.getElementById('event-email').value.trim();
 
-        if (!title || !date || !time || !location || !city || !email) {
-            alert('Please fill out Title, Email, City, Date, Time, and Location');
+        if (!title || !date || !location || !city || !email) {
+            alert('Please fill out Title, Email, City, Date, and Location');
             return;
         }
 
@@ -596,7 +596,7 @@ saveEvent.addEventListener('click', async (e) => {
             category_name:        category,
             city_name:            city,
             event_date:           date,
-            event_time:           time,
+            event_time:           time || null,
             location,
             address,
             price,

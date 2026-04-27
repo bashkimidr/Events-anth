@@ -121,7 +121,6 @@ saveEventBtn.addEventListener('click', async () => {
     const fields = [
         ['event-title',       'Event Title'],
         ['event-date',        'Date'],
-        ['event-time',        'Time'],
         ['event-location',    'Location'],
         ['event-price',       'Price'],
         ['event-description', 'Description'],
@@ -216,7 +215,7 @@ saveEventBtn.addEventListener('click', async () => {
         title:               vals['event-title'],
         description:         vals['event-description'],
         event_date:          vals['event-date'],
-        event_time:          vals['event-time'],
+        event_time:          document.getElementById('event-time').value.trim() || null,
         location:            vals['event-location'],
         address:             document.getElementById('event-address').value.trim() || null,
         price:               vals['event-price'],

@@ -58,8 +58,8 @@ function updateSEO(event, slug) {
         '@context': 'https://schema.org',
         '@type':    'Event',
         'name':     event.title,
-        'startDate': `${event.event_date}T${event.event_time || '00:00:00'}`,
-        'endDate':   `${event.event_date}T${event.event_time || '00:00:00'}`,
+        'startDate': event.event_time ? `${event.event_date}T${event.event_time}` : event.event_date,
+        'endDate':   event.event_time ? `${event.event_date}T${event.event_time}` : event.event_date,
         'eventAttendanceMode': 'https://schema.org/OfflineEventAttendanceMode',
         'eventStatus':         'https://schema.org/EventScheduled',
         'location': {
@@ -151,8 +151,10 @@ function renderEventContent(event, slug) {
     // Date + time
     const dateStr       = event.event_date ? formatDate(event.event_date) : 'Date TBA';
     const recurrenceText = window.formatRecurrenceText ? window.formatRecurrenceText(event) : null;
-    const fmtTime       = event.event_time && window.formatTimeShort ? window.formatTimeShort(event.event_time) : event.event_time;
-    const timeStr       = (!recurrenceText && fmtTime) ? ` · ${fmtTime}` : '';
+    const fmtTime = event.event_time && window.formatTimeShort
+        ? window.formatTimeShort(event.event_time)
+        : (event.event_time || null);
+    const timeStr = !recurrenceText ? ` · ${fmtTime || 'All day'}` : '';
     document.getElementById('event-date-time').textContent = dateStr + timeStr;
 
     const recurrenceRow = document.getElementById('event-recurrence-row');
