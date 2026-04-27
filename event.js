@@ -178,6 +178,15 @@ function renderEventContent(event, slug) {
         descEl.innerHTML = '<p style="font-style:italic;color:var(--text-muted);">No description provided for this event.</p>';
     }
 
+    // Map
+    const mapSection = document.getElementById('event-map-section');
+    if (event.address && mapSection) {
+        document.getElementById('event-map-address').textContent = event.address;
+        document.getElementById('event-map-iframe').src =
+            `https://www.google.com/maps?q=${encodeURIComponent(event.address)}&output=embed`;
+        mapSection.style.display = 'block';
+    }
+
     // RSVP
     updateGoingUI(event.id, event.base_going);
     document.getElementById('event-going-card').addEventListener('click', () => {
