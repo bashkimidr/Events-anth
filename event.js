@@ -229,6 +229,12 @@ async function renderMoreEvents(event) {
         const icon    = e.categories?.icon_name || iconFallbacks[cat] || 'calendar';
         const dateStr = e.event_date ? new Date(e.event_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
 
+        const imageHtml = e.image_url
+            ? `<div class="card-image-wrapper"><img src="${e.image_url}" alt="${e.title}"></div>`
+            : `<div class="card-image-wrapper placeholder-image" style="display:flex;align-items:center;justify-content:center;opacity:0.3;">
+                   <i data-lucide="${icon}" style="width:60px;height:60px;"></i>
+               </div>`;
+
         const link = document.createElement('a');
         link.href  = `/event/${e.slug}`;
 
@@ -240,9 +246,7 @@ async function renderMoreEvents(event) {
             <div class="card-icon" style="z-index:2;overflow:hidden;display:flex;justify-content:center;align-items:center;">
                 <i data-lucide="${icon}"></i>
             </div>
-            <div class="card-image-wrapper placeholder-image" style="display:flex;align-items:center;justify-content:center;opacity:0.3;background:var(--cat-${cat});">
-                <i data-lucide="${icon}" style="width:60px;height:60px;color:var(--icon-${cat});"></i>
-            </div>
+            ${imageHtml}
             <div class="card-content-wrapper">
                 <h3 class="card-title">${e.title}</h3>
                 <div class="card-meta">
