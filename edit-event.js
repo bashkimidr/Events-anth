@@ -184,6 +184,7 @@ function openEditForm(ev) {
     document.getElementById('edit-event-date').value        = ev.event_date   || '';
     document.getElementById('edit-event-time').value        = ev.event_time   || '';
     document.getElementById('edit-event-location').value    = ev.location     || '';
+    document.getElementById('edit-event-address').value     = ev.address      || '';
     document.getElementById('edit-event-price').value       = ev.price        || '';
     document.getElementById('edit-event-description').value = ev.description  || '';
     document.getElementById('edit-event-image-file').value  = '';
@@ -301,7 +302,9 @@ document.getElementById('edit-save-event').addEventListener('click', async () =>
         title, description,
         event_date:          date,
         event_time:          time,
-        location,            price,
+        location,
+        address:             document.getElementById('edit-event-address').value.trim() || null,
+        price,
         image_url,
         category_id:         editEventCategory.value,
         city_id:             cityId,

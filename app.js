@@ -543,6 +543,7 @@ saveEvent.addEventListener('click', async (e) => {
         const date        = document.getElementById('event-date').value;
         const time        = document.getElementById('event-time').value;
         const location    = document.getElementById('event-location').value.trim();
+        const address     = document.getElementById('event-address').value.trim() || null;
         const city        = document.getElementById('event-city').value;
         const price       = document.getElementById('event-price').value.trim();
         const description = document.getElementById('event-description').value.trim();
@@ -591,6 +592,7 @@ saveEvent.addEventListener('click', async (e) => {
             event_date:           date,
             event_time:           time,
             location,
+            address,
             price,
             submitter_email:      email,
             pending_image_data:   pendingImageData,
@@ -613,7 +615,7 @@ saveEvent.addEventListener('click', async (e) => {
         adminModal.classList.remove('active');
 
         ['event-title','event-email','event-date','event-time',
-         'event-location','event-price','event-description','event-image-file',
+         'event-location','event-address','event-price','event-description','event-image-file',
          'recurrence-type','recurrence-end-date']
             .forEach(id => { document.getElementById(id).value = ''; });
         document.getElementById('recurring-checkbox').checked            = false;

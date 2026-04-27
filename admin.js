@@ -218,6 +218,7 @@ saveEventBtn.addEventListener('click', async () => {
         event_date:          vals['event-date'],
         event_time:          vals['event-time'],
         location:            vals['event-location'],
+        address:             document.getElementById('event-address').value.trim() || null,
         price:               vals['event-price'],
         image_url,
         category_id:         categoryId,
@@ -241,7 +242,7 @@ saveEventBtn.addEventListener('click', async () => {
     showMessage('Event published!', 'success');
 
     // Reset form
-    ['event-title', 'event-date', 'event-time', 'event-location',
+    ['event-title', 'event-date', 'event-time', 'event-location', 'event-address',
      'event-price', 'event-description', 'event-image-file',
      'new-category-name', 'new-city-name',
      'recurrence-type', 'recurrence-end-date', 'recurrence-note'].forEach(id => {
