@@ -151,7 +151,8 @@ function renderEventContent(event, slug) {
     // Date + time
     const dateStr       = event.event_date ? formatDate(event.event_date) : 'Date TBA';
     const recurrenceText = window.formatRecurrenceText ? window.formatRecurrenceText(event) : null;
-    const timeStr       = (!recurrenceText && event.event_time) ? ` · ${event.event_time}` : '';
+    const fmtTime       = event.event_time && window.formatTimeShort ? window.formatTimeShort(event.event_time) : event.event_time;
+    const timeStr       = (!recurrenceText && fmtTime) ? ` · ${fmtTime}` : '';
     document.getElementById('event-date-time').textContent = dateStr + timeStr;
 
     const recurrenceRow = document.getElementById('event-recurrence-row');

@@ -55,7 +55,8 @@ function renderSubmissions(submissions) {
             'background:var(--bg-color);padding:16px;border-radius:var(--card-radius);' +
             'border:1px solid var(--border-color);';
 
-        const dateLabel      = [sub.event_date, sub.event_time].filter(Boolean).join(' · ');
+        const fmtTime        = sub.event_time && window.formatTimeShort ? window.formatTimeShort(sub.event_time) : sub.event_time;
+        const dateLabel      = [sub.event_date, fmtTime].filter(Boolean).join(' · ');
         const locLabel       = [sub.location, sub.city_name].filter(Boolean).join(', ');
         const recurrenceText = window.formatRecurrenceText ? window.formatRecurrenceText(sub) : null;
 

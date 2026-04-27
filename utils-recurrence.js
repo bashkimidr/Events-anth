@@ -18,6 +18,8 @@
         return `${months[mo - 1]} ${day}`;
     }
 
+    window.formatTimeShort = formatTimeShort;
+
     window.formatRecurrenceText = function (event) {
         if (event.recurrence_note) return event.recurrence_note;
         if (!event.recurrence_type) return null;

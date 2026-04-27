@@ -258,7 +258,7 @@ function renderEvents() {
             <div class="card-content-wrapper">
                 <h3 class="card-title">${event.title}</h3>
                 <div class="card-meta">
-                    <p class="card-date"><i data-lucide="calendar" class="meta-icon"></i>${formatDate(event.date)}${event.time ? ' <i data-lucide="' + (recurrenceText ? 'repeat' : 'clock') + '" class="meta-icon" style="margin-left:6px;"></i> ' + event.time : ''}</p>
+                    <p class="card-date"><i data-lucide="calendar" class="meta-icon"></i>${formatDate(event.date)}${event.time ? (recurrenceText ? ' <i data-lucide="repeat" class="meta-icon" style="margin-left:6px;"></i>' : '') + ' <i data-lucide="clock" class="meta-icon" style="margin-left:6px;"></i> ' + (window.formatTimeShort ? window.formatTimeShort(event.time) : event.time) : ''}</p>
                     ${event.location ? '<p class="card-location"><i data-lucide="map-pin" class="meta-icon"></i>' + event.location + (event.city ? ', ' + capitalizeWords(event.city) : '') + '</p>' : ''}
                 </div>
             </div>
