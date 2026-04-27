@@ -429,13 +429,20 @@ function updateFilterCardLabels() {
 }
 
 // --- Theme toggle ---
+// Sync icon on load with whatever the inline script already applied
+if (document.documentElement.getAttribute('data-theme') === 'dark') {
+    themeToggle.innerHTML = '<i data-lucide="sun"></i>';
+}
+
 themeToggle.addEventListener('click', () => {
-    const isDark = document.body.getAttribute('data-theme') === 'dark';
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
     if (isDark) {
-        document.body.removeAttribute('data-theme');
+        document.documentElement.removeAttribute('data-theme');
+        localStorage.setItem('theme', 'light');
         themeToggle.innerHTML = '<i data-lucide="moon"></i>';
     } else {
-        document.body.setAttribute('data-theme', 'dark');
+        document.documentElement.setAttribute('data-theme', 'dark');
+        localStorage.setItem('theme', 'dark');
         themeToggle.innerHTML = '<i data-lucide="sun"></i>';
     }
     lucide.createIcons();

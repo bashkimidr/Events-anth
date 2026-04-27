@@ -293,20 +293,19 @@ async function renderMoreEvents(event) {
 function initThemeToggle() {
     const btn = document.getElementById('theme-toggle');
     if (!btn) return;
-    const saved = localStorage.getItem('theme');
-    if (saved === 'dark') {
-        document.body.setAttribute('data-theme', 'dark');
+    // Inline script already applied data-theme to html; just sync the icon
+    if (document.documentElement.getAttribute('data-theme') === 'dark') {
         btn.innerHTML = '<i data-lucide="sun"></i>';
         lucide.createIcons({ nodes: [btn] });
     }
     btn.addEventListener('click', () => {
-        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         if (isDark) {
-            document.body.removeAttribute('data-theme');
+            document.documentElement.removeAttribute('data-theme');
             localStorage.setItem('theme', 'light');
             btn.innerHTML = '<i data-lucide="moon"></i>';
         } else {
-            document.body.setAttribute('data-theme', 'dark');
+            document.documentElement.setAttribute('data-theme', 'dark');
             localStorage.setItem('theme', 'dark');
             btn.innerHTML = '<i data-lucide="sun"></i>';
         }
