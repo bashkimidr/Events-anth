@@ -1078,3 +1078,27 @@ body {
 .about-eventeria.hidden {
     display: none;
 }
+
+/* ── Category color picker ─────────────────────────────────────────────────── */
+.color-palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 4px 0;
+}
+.color-swatch {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.1s, border-color 0.1s;
+}
+.color-swatch:hover {
+    transform: scale(1.1);
+}
+.color-swatch.selected {
+    border-color: var(--text-color);
+    transform: scale(1.1);
+}

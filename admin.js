@@ -4,6 +4,20 @@ import { supabase } from './supabase-client.js';
 
 const capitalizeWords = str => str ? str.replace(/\b\w/g, c => c.toUpperCase()) : str;
 
+function initCategoryPicker() {
+    const palette    = document.getElementById('new-category-color-palette');
+    const colorInput = document.getElementById('new-category-color');
+    if (!palette) return;
+
+    palette.querySelectorAll('.color-swatch').forEach(swatch => {
+        swatch.addEventListener('click', () => {
+            palette.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+            swatch.classList.add('selected');
+            colorInput.value = swatch.dataset.color;
+        });
+    });
+}
+
 // ── Auth gate ─────────────────────────────────────────────────────────────────
 const currentUser = await requireAdmin();
 
@@ -84,6 +98,7 @@ async function loadDropdowns() {
 }
 
 await loadDropdowns();
+initCategoryPicker();
 
 // ── Show/hide new-entry inputs ────────────────────────────────────────────────
 eventCategorySelect.addEventListener('change', () => {
@@ -146,10 +161,21 @@ saveEventBtn.addEventListener('click', async () => {
             showMessage('New category name is required.', 'error');
             return;
         }
-        const name = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+        const name      = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+        const iconName  = document.getElementById('new-category-icon')?.value || '';
+        const color     = document.getElementById('new-category-color')?.value || '';
+        if (!iconName) {
+            document.getElementById('new-category-icon')?.focus();
+            showMessage('Please select an icon for the new category.', 'error');
+            return;
+        }
+        if (!color) {
+            showMessage('Please select a color for the new category.', 'error');
+            return;
+        }
         const { data: newCat, error: catErr } = await supabase
             .from('categories')
-            .insert([{ name, slug: toSlug(name) }])
+            .insert([{ name, slug: toSlug(name), icon_name: iconName, color }])
             .select()
             .single();
         if (catErr) { showMessage('Failed to create category: ' + catErr.message, 'error'); return; }
@@ -254,5 +280,11 @@ saveEventBtn.addEventListener('click', async () => {
     document.getElementById('recurrence-day-monthly-wrap').style.display = 'none';
     newCategoryGroup.style.display = 'none';
     newCityGroup.style.display     = 'none';
+    const iconSel = document.getElementById('new-category-icon');
+    if (iconSel) iconSel.selectedIndex = 0;
+    const colorInput = document.getElementById('new-category-color');
+    if (colorInput) colorInput.value = '#a1a1a6';
+    document.getElementById('new-category-color-palette')
+        ?.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
     await loadDropdowns();
 });
