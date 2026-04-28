@@ -4,6 +4,191 @@ import { supabase } from './supabase-client.js';
 
 const capitalizeWords = str => str ? str.replace(/\b\w/g, c => c.toUpperCase()) : str;
 
+const ICON_OPTIONS = [
+    'music','mic','headphones','guitar','trophy','dumbbell','bike',
+    'book-open','graduation-cap','school','presentation',
+    'utensils','coffee','beer','wine','pizza',
+    'palette','image','brush','camera','film',
+    'sparkles','party-popper','gift','heart','users','hand-heart','message-circle',
+    'tree-pine','mountain','tent','sun',
+    'briefcase','calendar','map-pin','ticket',
+    'star','flame','rocket','zap','lightbulb',
+];
+
+const COLOR_SWATCHES = [
+    { hex: '#f43f5e', label: 'rose' },
+    { hex: '#fb923c', label: 'orange' },
+    { hex: '#facc15', label: 'yellow' },
+    { hex: '#84cc16', label: 'lime' },
+    { hex: '#10b981', label: 'emerald' },
+    { hex: '#06b6d4', label: 'cyan' },
+    { hex: '#3b82f6', label: 'blue' },
+    { hex: '#8b5cf6', label: 'violet' },
+    { hex: '#ec4899', label: 'pink' },
+    { hex: '#6b7280', label: 'slate' },
+    { hex: '#1f2937', label: 'charcoal' },
+    { hex: '#a1a1a6', label: 'silver' },
+];
+
+function buildIconSelect(currentIcon) {
+    const sel = document.createElement('select');
+    sel.style.cssText = 'width:100%;margin-top:2px;';
+    const blank = document.createElement('option');
+    blank.value = '';
+    blank.textContent = '— Select icon —';
+    sel.appendChild(blank);
+    ICON_OPTIONS.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        if (name === currentIcon) opt.selected = true;
+        sel.appendChild(opt);
+    });
+    return sel;
+}
+
+function buildColorPalette(currentColor) {
+    const wrap   = document.createElement('div');
+    wrap.className = 'color-palette';
+    const hidden = document.createElement('input');
+    hidden.type  = 'hidden';
+    hidden.className = 'edit-cat-color';
+    hidden.value = currentColor || '#a1a1a6';
+    COLOR_SWATCHES.forEach(({ hex, label }) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'color-swatch' + (hex === currentColor ? ' selected' : '');
+        btn.dataset.color = hex;
+        btn.style.background = hex;
+        btn.setAttribute('aria-label', label);
+        btn.addEventListener('click', () => {
+            wrap.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+            btn.classList.add('selected');
+            hidden.value = hex;
+        });
+        wrap.appendChild(btn);
+    });
+    wrap.appendChild(hidden);
+    return wrap;
+}
+
+function renderCategoryRow(li, cat) {
+    li.innerHTML = `
+        <span class="category-row-icon" style="color:${cat.color || 'inherit'};">
+            <i data-lucide="${cat.icon_name || 'calendar'}"></i>
+        </span>
+        <span class="category-row-name">${cat.name}</span>
+        <button type="button" class="category-edit-btn">Edit</button>
+    `;
+    li.querySelector('.category-edit-btn').addEventListener('click', () => openCategoryEditForm(li, cat));
+}
+
+function openCategoryEditForm(li, cat) {
+    const nameInput = document.createElement('input');
+    nameInput.type  = 'text';
+    nameInput.value = cat.name;
+    nameInput.placeholder = 'Category name';
+    nameInput.style.cssText = 'width:100%;box-sizing:border-box;';
+
+    const iconSelect   = buildIconSelect(cat.icon_name);
+    const colorPalette = buildColorPalette(cat.color);
+
+    const saveBtn = document.createElement('button');
+    saveBtn.type = 'button';
+    saveBtn.textContent = 'Save';
+    saveBtn.className = 'save-btn';
+    saveBtn.style.cssText = 'flex:1;padding:6px 12px;font-size:13px;';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.style.cssText =
+        'flex:1;padding:6px 12px;font-size:13px;background:transparent;' +
+        'border:1px solid var(--border-color);border-radius:8px;cursor:pointer;' +
+        'font-family:inherit;color:var(--text-muted);';
+
+    const btnRow = document.createElement('div');
+    btnRow.style.cssText = 'display:flex;gap:8px;';
+    btnRow.append(saveBtn, cancelBtn);
+
+    const lbl = (text) => {
+        const l = document.createElement('label');
+        l.style.cssText = 'display:block;font-size:13px;font-weight:500;margin-bottom:2px;';
+        l.textContent = text;
+        return l;
+    };
+
+    const form = document.createElement('div');
+    form.className = 'category-edit-form';
+    form.append(lbl('Name'), nameInput, lbl('Icon'), iconSelect, lbl('Color'), colorPalette, btnRow);
+
+    li.innerHTML = '';
+    li.appendChild(form);
+
+    saveBtn.addEventListener('click', async () => {
+        const name  = nameInput.value.trim();
+        const icon  = iconSelect.value;
+        const color = colorPalette.querySelector('.edit-cat-color').value;
+        if (!name)  { showMessage('Category name is required.', 'error'); return; }
+        if (!icon)  { showMessage('Please select an icon.', 'error'); return; }
+        if (!color) { showMessage('Please select a color.', 'error'); return; }
+
+        saveBtn.disabled    = true;
+        saveBtn.textContent = 'Saving…';
+
+        const { data: updated, error } = await supabase
+            .from('categories')
+            .update({ name, icon_name: icon, color })
+            .eq('id', cat.id)
+            .select()
+            .single();
+
+        if (error) {
+            saveBtn.disabled    = false;
+            saveBtn.textContent = 'Save';
+            showMessage('Failed to update category: ' + error.message, 'error');
+            return;
+        }
+
+        const idx = categoriesData.findIndex(c => c.id === cat.id);
+        if (idx !== -1) categoriesData[idx] = { ...categoriesData[idx], ...updated };
+
+        renderCategoryRow(li, updated);
+        lucide.createIcons({ nodes: [li] });
+        showMessage('Category updated.', 'success');
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        renderCategoryRow(li, cat);
+        lucide.createIcons({ nodes: [li] });
+    });
+}
+
+async function renderCategoriesList() {
+    const list = document.getElementById('categories-list');
+    if (!list) return;
+
+    const { data: cats, error } = await supabase
+        .from('categories')
+        .select('id, name, slug, icon_name, color')
+        .order('name', { ascending: true });
+
+    if (error) {
+        list.innerHTML = `<li style="color:#c62828;padding:8px;font-size:13px;">Failed to load categories: ${error.message}</li>`;
+        return;
+    }
+
+    list.innerHTML = '';
+    (cats || []).forEach(cat => {
+        const li = document.createElement('li');
+        li.className = 'category-row';
+        li.dataset.id = cat.id;
+        renderCategoryRow(li, cat);
+        list.appendChild(li);
+    });
+    lucide.createIcons();
+}
+
 function initCategoryPicker() {
     const palette    = document.getElementById('new-category-color-palette');
     const colorInput = document.getElementById('new-category-color');
@@ -99,6 +284,7 @@ async function loadDropdowns() {
 
 await loadDropdowns();
 initCategoryPicker();
+renderCategoriesList();
 
 // ── Show/hide new-entry inputs ────────────────────────────────────────────────
 eventCategorySelect.addEventListener('change', () => {
