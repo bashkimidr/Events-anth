@@ -270,7 +270,7 @@ function renderEvents() {
 
         card.innerHTML = `
             <div class="card-category-label">${event.category}</div>
-            <div class="card-icon" style="z-index:2;overflow:hidden;display:flex;justify-content:center;align-items:center;color:${event.categoryColor || 'inherit'};">
+            <div class="card-icon" style="z-index:2;overflow:hidden;display:flex;justify-content:center;align-items:center;color:${event.categoryColor || '#a1a1a6'};">
                 ${iconHtml}
             </div>
             ${imageHtml}
