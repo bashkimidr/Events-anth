@@ -54,6 +54,7 @@ function normalizeEvent(e) {
         category:            e.categories?.name     || '',
         categorySlug:        e.categories?.slug     || '',
         categoryIcon:        e.categories?.icon_name || null,
+        categoryColor:       e.categories?.color     || null,
         date:                e.event_date,
         time:                e.event_time            || '',
         event_time:          e.event_time            || '',
@@ -82,6 +83,24 @@ function getCategoryIcon(categoryName, iconName) {
 function formatDate(dateString) {
     const options = { month: 'short', day: 'numeric', year: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
+}
+
+// --- Dynamic category CSS vars from DB colors ---
+function getContrastColor(hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.55 ? '#1a1a1a' : '#ffffff';
+}
+
+function injectCategoryVars(categories) {
+    categories.forEach(cat => {
+        if (!cat.color) return;
+        const name = cat.name;
+        document.documentElement.style.setProperty(`--cat-${name}`, cat.color);
+        document.documentElement.style.setProperty(`--icon-${name}`, getContrastColor(cat.color));
+    });
 }
 
 // --- Category filter pills (rendered from DB) ---
@@ -251,7 +270,7 @@ function renderEvents() {
 
         card.innerHTML = `
             <div class="card-category-label">${event.category}</div>
-            <div class="card-icon" style="z-index:2;overflow:hidden;display:flex;justify-content:center;align-items:center;">
+            <div class="card-icon" style="z-index:2;overflow:hidden;display:flex;justify-content:center;align-items:center;color:${event.categoryColor || 'inherit'};">
                 ${iconHtml}
             </div>
             ${imageHtml}
@@ -737,6 +756,7 @@ async function init() {
     events         = (eventsResult.data     || []).map(normalizeEvent);
     citiesData     = citiesResult.data      || [];
     categoriesData = categoriesResult.data  || [];
+    injectCategoryVars(categoriesData);
 
     // Explicitly reset card state to "All" before any render or geo override
     filterCardCategories.dataset.category = 'All';
