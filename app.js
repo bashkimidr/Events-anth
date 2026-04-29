@@ -55,6 +55,7 @@ function normalizeEvent(e) {
         categorySlug:        e.categories?.slug     || '',
         categoryIcon:        e.categories?.icon_name || null,
         categoryColor:       e.categories?.color     || null,
+        categories:          e.categories            || null,
         date:                e.event_date,
         time:                e.event_time            || '',
         event_time:          e.event_time            || '',
@@ -270,7 +271,7 @@ function renderEvents() {
 
         card.innerHTML = `
             <div class="card-category-label">${event.category}</div>
-            <div class="card-icon" style="z-index:2;overflow:hidden;display:flex;justify-content:center;align-items:center;color:${event.categoryColor || '#a1a1a6'};">
+            <div class="card-icon" style="z-index:2;overflow:hidden;display:flex;justify-content:center;align-items:center;color:${event.categories?.color || '#a1a1a6'};">
                 ${iconHtml}
             </div>
             ${imageHtml}
