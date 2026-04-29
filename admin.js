@@ -204,6 +204,86 @@ function initCategoryPicker() {
     buildSwatches(wrap, hidden, null);
 }
 
+// ── Smart Paste ───────────────────────────────────────────────────────────────
+let smartPasteImageBase64 = null;
+
+function initSmartPaste() {
+    const btn    = document.getElementById('smart-paste-btn');
+    const urlIn  = document.getElementById('smart-paste-url');
+    const status = document.getElementById('smart-paste-status');
+
+    function setStatus(text, cls) {
+        status.textContent  = text;
+        status.className    = 'smart-paste-status ' + cls;
+        status.style.display = text ? 'block' : 'none';
+    }
+
+    btn.addEventListener('click', async () => {
+        const url = urlIn.value.trim();
+        if (!url) { setStatus('Please enter a URL.', 'error'); return; }
+        if (!/^https?:\/\//i.test(url)) { setStatus('URL must start with http:// or https://', 'error'); return; }
+
+        btn.disabled    = true;
+        btn.textContent = 'Extracting…';
+        setStatus('', '');
+
+        try {
+            const res  = await fetch('/api/extract-event', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ url }),
+            });
+            const data = await res.json();
+
+            if (!res.ok) {
+                setStatus('Could not extract: ' + (data.error || res.statusText), 'error');
+                return;
+            }
+
+            // Populate form fields
+            const map = {
+                title:       'event-title',
+                description: 'event-description',
+                eventDate:   'event-date',
+                eventTime:   'event-time',
+                location:    'event-location',
+                address:     'event-address',
+                price:       'event-price',
+            };
+            Object.entries(map).forEach(([key, id]) => {
+                if (data[key]) {
+                    const el = document.getElementById(id);
+                    if (el) el.value = data[key];
+                }
+            });
+
+            // Stage base64 image
+            smartPasteImageBase64 = null;
+            const preview = document.getElementById('smart-paste-image-preview');
+            if (data.imageBase64) {
+                smartPasteImageBase64 = data.imageBase64;
+                preview.src          = data.imageBase64;
+                preview.style.display = 'block';
+            } else {
+                preview.style.display = 'none';
+                preview.src           = '';
+            }
+
+            const method = data.sourceMethod || 'unknown';
+            const warn   = method === 'opengraph';
+            setStatus(
+                `Extracted via ${method}. Review fields and complete any missing ones.`,
+                warn ? 'warn' : 'success'
+            );
+        } catch (err) {
+            setStatus('Could not extract: ' + err.message, 'error');
+        } finally {
+            btn.disabled    = false;
+            btn.textContent = 'Extract';
+        }
+    });
+}
+
 // ── Auth gate ─────────────────────────────────────────────────────────────────
 const currentUser = await requireAdmin();
 
@@ -285,6 +365,7 @@ async function loadDropdowns() {
 
 await loadDropdowns();
 initCategoryPicker();
+initSmartPaste();
 renderCategoriesList();
 
 // ── Show/hide new-entry inputs ────────────────────────────────────────────────
@@ -396,11 +477,24 @@ saveEventBtn.addEventListener('click', async () => {
         if (!cityId) { showMessage('Please select a city.', 'error'); return; }
     }
 
-    // Upload image if provided
+    // Upload image — prefer file pick, fall back to Smart Paste base64
     let image_url = '';
     const imageFile = document.getElementById('event-image-file').files[0];
     if (imageFile) {
         const { data: imgData, error: imgErr } = await uploadEventImage(imageFile);
+        if (imgErr) { showMessage('Image upload failed: ' + imgErr.message, 'error'); return; }
+        image_url = imgData.publicUrl;
+    } else if (smartPasteImageBase64) {
+        // Convert base64 data URL → File and upload via the same path
+        const [meta, b64] = smartPasteImageBase64.split(',');
+        const mime = (meta.match(/:(.*?);/) || [])[1] || 'image/jpeg';
+        const ext  = mime.split('/')[1] || 'jpg';
+        const byteStr = atob(b64);
+        const u8 = new Uint8Array(byteStr.length);
+        for (let i = 0; i < byteStr.length; i++) u8[i] = byteStr.charCodeAt(i);
+        const blob = new Blob([u8], { type: mime });
+        const file = new File([blob], `smart-paste.${ext}`, { type: mime });
+        const { data: imgData, error: imgErr } = await uploadEventImage(file);
         if (imgErr) { showMessage('Image upload failed: ' + imgErr.message, 'error'); return; }
         image_url = imgData.publicUrl;
     }
@@ -467,6 +561,15 @@ saveEventBtn.addEventListener('click', async () => {
     document.getElementById('recurrence-day-monthly-wrap').style.display = 'none';
     newCategoryGroup.style.display = 'none';
     newCityGroup.style.display     = 'none';
+    // Clear Smart Paste state
+    smartPasteImageBase64 = null;
+    document.getElementById('smart-paste-url').value   = '';
+    const spStatus = document.getElementById('smart-paste-status');
+    spStatus.style.display = 'none';
+    const spPreview = document.getElementById('smart-paste-image-preview');
+    spPreview.style.display = 'none';
+    spPreview.src = '';
+
     const iconSel = document.getElementById('new-category-icon');
     if (iconSel) iconSel.selectedIndex = 0;
     const colorInput = document.getElementById('new-category-color');

@@ -85,6 +85,18 @@
         .category-edit-btn { padding: 4px 12px; background: transparent; border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 13px; color: var(--text-muted); }
         .category-edit-btn:hover { color: var(--text-color); border-color: var(--text-color); }
         .category-edit-form { width: 100%; padding: 12px 0; display: flex; flex-direction: column; gap: 12px; }
+        .smart-paste-panel { background: var(--card-bg, #f5f5f7); border: 1px solid var(--border-color, #e0e0e3); border-radius: 12px; padding: 16px; margin-bottom: 24px; }
+        .smart-paste-heading { margin: 0 0 4px; font-size: 1.1rem; font-weight: 600; }
+        .smart-paste-hint { margin: 0 0 12px; font-size: 0.9rem; color: var(--text-muted, #6e6e73); }
+        .smart-paste-row { display: flex; gap: 8px; }
+        .smart-paste-row input { flex: 1; padding: 8px 12px; border: 1px solid var(--border-color, #d1d1d6); border-radius: 8px; font-size: 0.95rem; background: var(--bg-color); color: var(--text-color); font-family: inherit; }
+        .smart-paste-row button { padding: 8px 16px; background: var(--text-color); color: var(--bg-color); border: none; border-radius: 8px; cursor: pointer; font-weight: 500; font-family: inherit; font-size: 0.95rem; }
+        .smart-paste-row button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .smart-paste-status { margin: 12px 0 0; font-size: 0.9rem; }
+        .smart-paste-status.success { color: #10b981; }
+        .smart-paste-status.error   { color: #ef4444; }
+        .smart-paste-status.warn    { color: #fb923c; }
+        #smart-paste-image-preview { display: none; max-width: 100%; max-height: 180px; border-radius: 8px; margin-top: 8px; object-fit: contain; }
     </style>
 </head>
 <body data-theme="">
@@ -100,6 +112,16 @@
                 Signed in as <strong id="admin-email">…</strong>
                 <button id="signout-btn">Sign Out</button>
             </div>
+        </div>
+
+        <div class="smart-paste-panel">
+            <h3 class="smart-paste-heading">Smart Paste</h3>
+            <p class="smart-paste-hint">Paste an event URL — we'll extract the details for you to review.</p>
+            <div class="smart-paste-row">
+                <input type="url" id="smart-paste-url" placeholder="https://example.com/events/concert" autocomplete="off">
+                <button type="button" id="smart-paste-btn">Extract</button>
+            </div>
+            <p class="smart-paste-status" id="smart-paste-status" style="display:none;"></p>
         </div>
 
         <div class="form-group">
@@ -259,6 +281,7 @@
         <div class="form-group">
             <label for="event-image-file">Event Image</label>
             <input type="file" id="event-image-file" accept="image/*">
+            <img id="smart-paste-image-preview" alt="Extracted image preview">
         </div>
         <div class="save-wrap">
             <button class="save-btn" id="save-event">Publish Event</button>
