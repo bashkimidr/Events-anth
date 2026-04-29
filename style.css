@@ -1081,10 +1081,11 @@ body {
 
 /* ── Category color picker ─────────────────────────────────────────────────── */
 .color-palette {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    gap: 6px;
     padding: 4px 0;
+    max-width: max-content;
 }
 .color-swatch {
     width: 28px;

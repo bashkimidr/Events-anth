@@ -15,19 +15,19 @@ const ICON_OPTIONS = [
     'star','flame','rocket','zap','lightbulb',
 ];
 
-const COLOR_SWATCHES = [
-    { hex: '#f43f5e', label: 'rose' },
-    { hex: '#fb923c', label: 'orange' },
-    { hex: '#facc15', label: 'yellow' },
-    { hex: '#84cc16', label: 'lime' },
-    { hex: '#10b981', label: 'emerald' },
-    { hex: '#06b6d4', label: 'cyan' },
-    { hex: '#3b82f6', label: 'blue' },
-    { hex: '#8b5cf6', label: 'violet' },
-    { hex: '#ec4899', label: 'pink' },
-    { hex: '#6b7280', label: 'slate' },
-    { hex: '#1f2937', label: 'charcoal' },
-    { hex: '#a1a1a6', label: 'silver' },
+const PALETTE = [
+    ['rose',     '#f43f5e', '#fb7185', '#fecdd3'],
+    ['orange',   '#fb923c', '#fdba74', '#fed7aa'],
+    ['yellow',   '#facc15', '#fde047', '#fef08a'],
+    ['lime',     '#84cc16', '#a3e635', '#bef264'],
+    ['emerald',  '#10b981', '#34d399', '#a7f3d0'],
+    ['cyan',     '#06b6d4', '#22d3ee', '#a5f3fc'],
+    ['blue',     '#3b82f6', '#60a5fa', '#bfdbfe'],
+    ['violet',   '#8b5cf6', '#a78bfa', '#c4b5fd'],
+    ['pink',     '#ec4899', '#f472b6', '#f9a8d4'],
+    ['slate',    '#6b7280', '#94a3b8', '#cbd5e1'],
+    ['charcoal', '#1f2937', '#475569', '#94a3b8'],
+    ['silver',   '#a1a1a6', '#d4d4d8', '#e4e4e7'],
 ];
 
 function buildIconSelect(currentIcon) {
@@ -47,27 +47,35 @@ function buildIconSelect(currentIcon) {
     return sel;
 }
 
+function buildSwatches(wrap, hiddenInput, currentColor) {
+    wrap.querySelectorAll('.color-swatch').forEach(s => s.remove());
+    const norm = c => (c || '').toLowerCase();
+    PALETTE.forEach(([name, vivid, medium, pastel]) => {
+        [vivid, medium, pastel].forEach(hex => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'color-swatch' + (norm(hex) === norm(currentColor) ? ' selected' : '');
+            btn.dataset.color = hex;
+            btn.style.background = hex;
+            btn.setAttribute('aria-label', name);
+            btn.addEventListener('click', () => {
+                wrap.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+                btn.classList.add('selected');
+                hiddenInput.value = hex;
+            });
+            wrap.appendChild(btn);
+        });
+    });
+}
+
 function buildColorPalette(currentColor) {
     const wrap   = document.createElement('div');
     wrap.className = 'color-palette';
     const hidden = document.createElement('input');
     hidden.type  = 'hidden';
     hidden.className = 'edit-cat-color';
-    hidden.value = currentColor || '#a1a1a6';
-    COLOR_SWATCHES.forEach(({ hex, label }) => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = 'color-swatch' + (hex === currentColor ? ' selected' : '');
-        btn.dataset.color = hex;
-        btn.style.background = hex;
-        btn.setAttribute('aria-label', label);
-        btn.addEventListener('click', () => {
-            wrap.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
-            btn.classList.add('selected');
-            hidden.value = hex;
-        });
-        wrap.appendChild(btn);
-    });
+    hidden.value = currentColor || '';
+    buildSwatches(wrap, hidden, currentColor);
     wrap.appendChild(hidden);
     return wrap;
 }
@@ -190,17 +198,10 @@ async function renderCategoriesList() {
 }
 
 function initCategoryPicker() {
-    const palette    = document.getElementById('new-category-color-palette');
-    const colorInput = document.getElementById('new-category-color');
-    if (!palette) return;
-
-    palette.querySelectorAll('.color-swatch').forEach(swatch => {
-        swatch.addEventListener('click', () => {
-            palette.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
-            swatch.classList.add('selected');
-            colorInput.value = swatch.dataset.color;
-        });
-    });
+    const wrap   = document.getElementById('new-category-color-palette');
+    const hidden = document.getElementById('new-category-color');
+    if (!wrap || !hidden) return;
+    buildSwatches(wrap, hidden, null);
 }
 
 // ── Auth gate ─────────────────────────────────────────────────────────────────
@@ -469,7 +470,7 @@ saveEventBtn.addEventListener('click', async () => {
     const iconSel = document.getElementById('new-category-icon');
     if (iconSel) iconSel.selectedIndex = 0;
     const colorInput = document.getElementById('new-category-color');
-    if (colorInput) colorInput.value = '#a1a1a6';
+    if (colorInput) colorInput.value = '';
     document.getElementById('new-category-color-palette')
         ?.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
     await loadDropdowns();
