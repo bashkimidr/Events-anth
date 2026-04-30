@@ -5,6 +5,15 @@ const SITE_CONFIG = window.SITE_CONFIG || {};
 
 const capitalizeWords = str => str ? str.replace(/\b\w/g, c => c.toUpperCase()) : str;
 
+function getContrastColor(hex) {
+    if (!hex || hex.length < 7) return '#1a1a1a';
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.55 ? '#1a1a1a' : '#ffffff';
+}
+
 const iconFallbacks = {
     'Sports':        'dribbble',
     'Education':     'book-open',
@@ -124,9 +133,12 @@ function updateGoingUI(eventId, goingCount) {
 }
 
 function renderEventContent(event, slug) {
-    const cityName = capitalizeWords(event.cities?.name || '');
-    const catName  = event.categories?.name || '';
-    const catIcon  = event.categories?.icon_name || iconFallbacks[catName] || 'calendar';
+    const cityName  = capitalizeWords(event.cities?.name || '');
+    const catName   = event.categories?.name || '';
+    const catIcon   = event.categories?.icon_name || iconFallbacks[catName] || 'calendar';
+    const catColor  = event.categories?.color || null;
+    const catBg     = catColor || `var(--cat-${catName})`;
+    const catFg     = catColor ? getContrastColor(catColor) : `var(--icon-${catName})`;
 
     // Cover image
     const coverEl = document.getElementById('event-cover');
@@ -134,15 +146,15 @@ function renderEventContent(event, slug) {
         coverEl.innerHTML = `<img src="${event.image_url}" alt="${event.title}">`;
     } else {
         coverEl.innerHTML = `
-            <div class="event-cover-placeholder" style="background:var(--cat-${catName});">
-                <i data-lucide="${catIcon}" style="color:var(--icon-${catName});"></i>
+            <div class="event-cover-placeholder" style="background:${catBg};">
+                <i data-lucide="${catIcon}" style="color:${catFg};"></i>
             </div>`;
     }
 
     // Category badge
     const badgeEl = document.getElementById('event-category-badge');
-    badgeEl.style.background = `var(--cat-${catName})`;
-    badgeEl.style.color      = `var(--icon-${catName})`;
+    badgeEl.style.background = catBg;
+    badgeEl.style.color      = catFg;
     badgeEl.innerHTML        = `<i data-lucide="${catIcon}"></i>${catName}`;
 
     // Title
@@ -254,14 +266,17 @@ async function renderMoreEvents(event) {
     grid.innerHTML = '';
 
     data.forEach(e => {
-        const cat     = e.categories?.name || '';
-        const icon    = e.categories?.icon_name || iconFallbacks[cat] || 'calendar';
-        const dateStr = e.event_date ? new Date(e.event_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+        const cat      = e.categories?.name || '';
+        const icon     = e.categories?.icon_name || iconFallbacks[cat] || 'calendar';
+        const eColor   = e.categories?.color || null;
+        const eBg      = eColor || `var(--cat-${cat})`;
+        const eFg      = eColor ? getContrastColor(eColor) : `var(--icon-${cat})`;
+        const dateStr  = e.event_date ? new Date(e.event_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
 
         const imageHtml = e.image_url
             ? `<div class="card-image-wrapper"><img src="${e.image_url}" alt="${e.title}"></div>`
             : `<div class="card-image-wrapper placeholder-image" style="display:flex;align-items:center;justify-content:center;opacity:0.3;">
-                   <i data-lucide="${icon}" style="width:60px;height:60px;"></i>
+                   <i data-lucide="${icon}" style="width:60px;height:60px;color:${eFg};"></i>
                </div>`;
 
         const link = document.createElement('a');
@@ -270,9 +285,10 @@ async function renderMoreEvents(event) {
         const card = document.createElement('div');
         card.className = 'event-card';
         card.setAttribute('data-cat', cat);
+        card.style.background = eBg;
         card.innerHTML = `
             <div class="card-category-label">${cat}</div>
-            <div class="card-icon" style="z-index:2;overflow:hidden;display:flex;justify-content:center;align-items:center;">
+            <div class="card-icon" style="z-index:2;overflow:hidden;display:flex;justify-content:center;align-items:center;color:${eFg};">
                 <i data-lucide="${icon}"></i>
             </div>
             ${imageHtml}

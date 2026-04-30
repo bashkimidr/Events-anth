@@ -24,7 +24,7 @@ export async function fetchPublishedEvents() {
     const today = new Date().toISOString().split('T')[0];
     const { data, error } = await supabase
         .from('events')
-        .select('*, cities(name, slug), categories(name, slug, icon_name)')
+        .select('*, cities(name, slug), categories(name, slug, icon_name, color)')
         .eq('status', 'published')
         .gte('event_date', today)
         .order('event_date', { ascending: true });
@@ -100,7 +100,7 @@ export async function getCurrentUserWithAdminFlag() {
 export async function fetchEventBySlug(slug) {
     const { data, error } = await supabase
         .from('events')
-        .select('*, cities(name, slug), categories(name, slug, icon_name)')
+        .select('*, cities(name, slug), categories(name, slug, icon_name, color)')
         .eq('slug', slug)
         .eq('status', 'published')
         .maybeSingle();
@@ -111,7 +111,7 @@ export async function fetchPublishedEventsByCity(cityId, excludeId) {
     const today = new Date().toISOString().split('T')[0];
     const query = supabase
         .from('events')
-        .select('*, cities(name, slug), categories(name, slug, icon_name)')
+        .select('*, cities(name, slug), categories(name, slug, icon_name, color)')
         .eq('status', 'published')
         .eq('city_id', cityId)
         .gte('event_date', today)
@@ -127,7 +127,7 @@ export async function fetchPublishedEventsByCity(cityId, excludeId) {
 export async function fetchAllEvents() {
     const { data, error } = await supabase
         .from('events')
-        .select('*, cities(name, slug), categories(name, slug, icon_name)')
+        .select('*, cities(name, slug), categories(name, slug, icon_name, color)')
         .order('event_date', { ascending: false });
     return { data, error };
 }
@@ -135,7 +135,7 @@ export async function fetchAllEvents() {
 export async function fetchEventById(id) {
     const { data, error } = await supabase
         .from('events')
-        .select('*, cities(name, slug), categories(name, slug, icon_name)')
+        .select('*, cities(name, slug), categories(name, slug, icon_name, color)')
         .eq('id', id)
         .single();
     return { data, error };
