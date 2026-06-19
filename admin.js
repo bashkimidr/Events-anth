@@ -4,6 +4,11 @@ import { supabase } from './supabase-client.js';
 
 const capitalizeWords = str => str ? str.replace(/\b\w/g, c => c.toUpperCase()) : str;
 
+function formatDate(dateStr) {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
 const ICON_OPTIONS = [
     'music','mic','headphones','guitar','trophy','dumbbell','bike',
     'book-open','graduation-cap','school','presentation',
@@ -284,6 +289,81 @@ function initSmartPaste() {
     });
 }
 
+// ── Past Events list ──────────────────────────────────────────────────────────
+async function renderPastEventsList() {
+    const list = document.getElementById('past-events-list');
+    if (!list) return;
+
+    const today = new Date().toISOString().slice(0, 10);
+    const { data: events, error } = await supabase
+        .from('events')
+        .select('*, cities(name, slug), categories(name, slug, icon_name, color)')
+        .lt('event_date', today)
+        .order('event_date', { ascending: false })
+        .limit(100);
+
+    if (error) {
+        list.innerHTML = `<li style="color:#c62828;padding:8px;font-size:13px;">Failed to load past events: ${error.message}</li>`;
+        return;
+    }
+
+    list.innerHTML = '';
+
+    if (!events || events.length === 0) {
+        list.innerHTML = '<li class="past-events-empty">No past events yet.</li>';
+        return;
+    }
+
+    events.forEach(event => {
+        const li = document.createElement('li');
+        li.className = 'past-event-row';
+        li.dataset.id = event.id;
+
+        const iconColor = event.categories?.color || '#a1a1a6';
+        const iconName  = event.categories?.icon_name || 'calendar';
+        const cityName  = event.cities?.name || '';
+
+        li.innerHTML = `
+            <span class="past-event-icon" style="color: ${iconColor};">
+                <i data-lucide="${iconName}"></i>
+            </span>
+            <div class="past-event-info">
+                <div class="past-event-title">${event.title}</div>
+                <div class="past-event-meta">${formatDate(event.event_date)}${cityName ? ' · ' + cityName : ''}</div>
+            </div>
+            <div class="past-event-actions">
+                <button type="button" class="past-event-edit-btn">Edit</button>
+                <button type="button" class="past-event-delete-btn">Delete</button>
+            </div>
+        `;
+
+        li.querySelector('.past-event-edit-btn').addEventListener('click', () => {
+            window.location.href = `/edit-event?id=${event.id}`;
+        });
+
+        li.querySelector('.past-event-delete-btn').addEventListener('click', async () => {
+            if (!confirm('Delete this past event? This cannot be undone.')) return;
+
+            const { error: delErr } = await supabase
+                .from('events')
+                .delete()
+                .eq('id', event.id);
+
+            if (delErr) {
+                showMessage('Failed to delete event: ' + delErr.message, 'error');
+                return;
+            }
+
+            li.remove();
+            showMessage('Event deleted.', 'success');
+        });
+
+        list.appendChild(li);
+    });
+
+    lucide.createIcons({ nodes: [list] });
+}
+
 // ── Auth gate ─────────────────────────────────────────────────────────────────
 const currentUser = await requireAdmin();
 
@@ -367,6 +447,7 @@ await loadDropdowns();
 initCategoryPicker();
 initSmartPaste();
 renderCategoriesList();
+renderPastEventsList();
 
 // ── Show/hide new-entry inputs ────────────────────────────────────────────────
 eventCategorySelect.addEventListener('change', () => {

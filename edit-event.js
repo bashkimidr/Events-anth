@@ -336,6 +336,17 @@ document.getElementById('edit-save-event').addEventListener('click', async () =>
     showMessage('Changes saved!', 'success');
 });
 
+// ── Pre-select event from URL param (?id=) ───────────────────────────────────
+const preloadId = new URLSearchParams(location.search).get('id');
+if (preloadId) {
+    const { data: ev, error: evErr } = await supabase
+        .from('events')
+        .select('*, cities(id, name, slug), categories(id, name, slug, icon_name, color)')
+        .eq('id', preloadId)
+        .single();
+    if (!evErr && ev) openEditForm(ev);
+}
+
 // ── Delete event ──────────────────────────────────────────────────────────────
 document.getElementById('edit-delete-event').addEventListener('click', async () => {
     const id = document.getElementById('edit-event-id').value;

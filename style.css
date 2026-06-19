@@ -1103,3 +1103,53 @@ body {
     border-color: var(--text-color);
     transform: scale(1.1);
 }
+
+/* ── Admin: Past Events list ───────────────────────────────────────────────── */
+.section-hint {
+    margin: 0 0 8px;
+    font-size: 0.9rem;
+    color: var(--text-muted, #6e6e73);
+}
+.past-events-list { list-style: none; padding: 0; margin: 12px 0; }
+.past-event-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+.past-event-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+}
+.past-event-info { flex: 1; min-width: 0; }
+.past-event-title {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.past-event-meta {
+    font-size: 0.9rem;
+    color: var(--muted-color, #6e6e73);
+    margin-top: 2px;
+}
+.past-event-actions { display: flex; gap: 8px; }
+.past-event-actions button {
+    padding: 6px 12px;
+    font-size: 0.9rem;
+}
+.past-event-delete-btn {
+    background: var(--danger-bg, #fee2e2);
+    color: var(--danger-color, #dc2626);
+}
+.past-events-empty {
+    padding: 16px;
+    text-align: center;
+    color: var(--muted-color, #6e6e73);
+    font-style: italic;
+}
