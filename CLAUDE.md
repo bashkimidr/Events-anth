@@ -28,7 +28,7 @@ Read this file first in every session, then the top block of `PROGRESS.md`.
 3. **Evidence, not claims.** The final report shows each check with its real result. Anything not run is marked **NOT VERIFIED** — never "should work".
 4. **Budgets.** Max 3 fix attempts on the same failure; then stop and report what was tried.
 5. **Session memory.** At the end of every session add a dated block to the top of `PROGRESS.md`: what changed, what is half-done, the exact next action.
-6. **Isolation.** One branch per task; merge to `main` only after the owner approves.
+6. **Isolation.** One branch per task. Claude merges it to `main` itself once the checks are green; no waiting for the owner to merge (owner's rule 2026-10-23).
 
 ## Report format
 1. What was done (files). 2. How to verify (numbered, non-expert steps). 3. Check results (with evidence). 4. Improvement suggestions (awaiting approval).
